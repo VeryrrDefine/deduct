@@ -1,0 +1,25 @@
+{
+  "name": "deduct",
+  "version": "0.1.0",
+  "description": "Deduct",
+  "scripts": {
+    "test": "npx jest",
+    "build:only": "rolldown --config rolldown.config.ts",
+    "type-check": "tsc --noEmit",
+    "build": "npm run type-check && npm run build:only"
+  },
+  "author": "Veryrrdefine",
+  "license": "MIT",
+  "type": "module",
+  "devDependencies": {
+    "rolldown": "^1.0.0-rc.3",
+    "typescript": "^5.9.3"
+  },
+  "keywords": [],
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "chevrotain": "^12.0.0"
+  }
+}
