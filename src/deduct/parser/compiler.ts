@@ -3,6 +3,7 @@ import {
 	IffPropositionAST,
 	ImplicationPropositionAST,
 	LetterPropositionAST,
+	NotPropositionAST,
 } from './ast';
 import PropositionLexer from './lexer';
 import { PropositionParser } from './parser';
@@ -29,14 +30,20 @@ class CstToAstVisitor extends parserInstance.getBaseCstVisitorConstructor() {
 	}
 	implicationProposition(ctx: any): any {
 		if (!ctx.implicationProposition) {
-			return this.visit(ctx.baseProposition);
+			return this.visit(ctx.notProposition);
 		}
 		return new ImplicationPropositionAST(
-			this.visit(ctx.baseProposition),
+			this.visit(ctx.notProposition),
 			this.visit(ctx.implicationProposition),
 		);
 	}
 
+	notProposition(ctx: any): any {
+		if (ctx.Not) {
+			return new NotPropositionAST(this.visit(ctx.baseProposition));
+		}
+		return this.visit(ctx.baseProposition);
+	}
 	baseProposition(ctx: any): any {
 		if (ctx.letterProposition) {
 			return this.visit(ctx.letterProposition);

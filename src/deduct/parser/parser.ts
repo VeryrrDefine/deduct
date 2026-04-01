@@ -5,6 +5,7 @@ import {
 	LeftRightarrow,
 	LetterProposition,
 	LParen,
+	Not,
 	Rightarrow,
 	RParen,
 } from './lexer';
@@ -33,12 +34,19 @@ export class PropositionParser extends CstParser {
 
 	// 蕴含命题（右结合）
 	public implicationProposition = this.RULE('implicationProposition', () => {
-		this.SUBRULE(this.baseProposition); // 左侧：基础命题
+		this.SUBRULE(this.notProposition); // 左侧：基础命题
 		this.OPTION(() => {
 			// 可选右侧递归
 			this.CONSUME(Rightarrow);
 			this.SUBRULE2(this.implicationProposition); // 右侧递归实现右结合
 		});
+	});
+
+	public notProposition = this.RULE('notProposition', () => {
+		this.OPTION(() => {
+			this.CONSUME(Not);
+		});
+		this.SUBRULE(this.baseProposition);
 	});
 
 	// 基础命题：原子或括号

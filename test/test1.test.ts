@@ -16,6 +16,10 @@ const ast2 = parseAndConvertToAst('$0>$1');
 
 const ast3 = parseAndConvertToAst('$0');
 const ast4 = parseAndConvertToAst('$2');
+const ast5 = parseAndConvertToAst('~$2>$3>$4');
+const astpierce = parseAndConvertToAst('(($0>$1)>$0)>$0');
+console.log(ast5);
+console.log(astpierce);
 // const matchmap = {};
 // const trytomatch = FormalSystem.match(ast3, ast2, matchmap);
 // console.log(trytomatch, matchmap);
@@ -24,8 +28,8 @@ const ast4 = parseAndConvertToAst('$2');
 // const mpMatch = FormalSystem.ruleModusPonens(ast2, ast3);
 // console.log('modus ponens match result:', mpMatch);
 
-const match2 = FormalSystem.ruleDotI(ast2);
-console.log(match2.toString());
+// const match2 = FormalSystem.ruleDotI(ast2);
+// console.log(match2.toString());
 // const mpMatch2 = FormalSystem.ruleModusPonens(ast2, ast3);
 // console.log('modus ponens match result:', mpMatch2);
 // const trytomatch2 = FormalSystem.match(ast3, ast4, matchmap);

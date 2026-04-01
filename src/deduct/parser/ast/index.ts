@@ -50,3 +50,14 @@ export class IffPropositionAST extends Proposition {
 		return `[(${this.left.toString()}) iff (${this.right.toString()})]`;
 	}
 }
+
+export class NotPropositionAST extends Proposition {
+	prop: Proposition;
+	constructor(prop: Proposition) {
+		super();
+		this.prop = prop;
+	}
+	toString(): string {
+		return `[not (${this.prop})]`;
+	}
+}

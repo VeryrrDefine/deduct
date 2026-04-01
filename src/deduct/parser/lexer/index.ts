@@ -20,6 +20,7 @@ export const Rightarrow = createToken({
 
 export const LParen = createToken({ name: 'LParen', pattern: /\(/ });
 export const RParen = createToken({ name: 'RParen', pattern: /\)/ });
+export const Not = createToken({ name: 'Not', pattern: /~|¬/ });
 
 const Whitespace = createToken({
 	name: 'Whitespace',
@@ -33,6 +34,7 @@ export const allTokens = [
 	LetterProposition,
 	LeftRightarrow,
 	Rightarrow,
+	Not,
 	LParen,
 	RParen,
 	Whitespace,
