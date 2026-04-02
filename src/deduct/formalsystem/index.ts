@@ -109,7 +109,7 @@ export class FormalSystem {
 
 		const matchResult = matchTable['$1'];
 		if (matchResult === undefined) throw new ReferenceError('Unable to get $1.');
-		return matchTable['$1'];
+		return matchResult;
 	}
 
 	/**
@@ -165,10 +165,15 @@ export class FormalSystem {
 	 * `⊢$0>$0`
 	 */
 	static ruleDotI($0: Prop) {
+		// $0>($0>$0)
 		const theorem1 = this.ruleA1($0, $0);
+		// $0>(($0>$0)>$0)
 		const theorem2 = this.ruleA1($0, new Impl($0, $0));
+		// $0>(($0>$0)>$0)>(($0>($0>$0)) > ($0>$0))
 		const theorem3 = this.ruleA2($0, new Impl($0, $0), $0);
+		// (($0>($0>$0)) > ($0>$0))
 		const theorem4 = this.ruleModusPonens(theorem3, theorem2);
+		// ($0>$0)
 		const theorem5 = this.ruleModusPonens(theorem4, theorem1);
 
 		return theorem5;
