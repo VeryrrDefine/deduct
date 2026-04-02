@@ -7,6 +7,7 @@ import {
 	type Proposition as Prop,
 } from '../parser/ast';
 class MatchError extends Error {}
+class LogicError extends Error {}
 type MatchTable = {
 	[key: string]: Prop;
 };
@@ -25,6 +26,7 @@ export class FormalSystem {
 	static match(currentAST: Prop, goalAST: Prop, anyPropositionMap: MatchTable) {
 		FormalSystem.debugLog(`Matching ${currentAST} to ${goalAST}`);
 
+		//match方法中currentAST的$0,$1 是类似于字母类型的命题，而要匹配goalAST中的$xxx，故只处理了goalAST 是anyprop的情况。
 		if (goalAST instanceof AnyProp) {
 			if (this.freeEquals(currentAST, anyPropositionMap[goalAST.name])) {
 				FormalSystem.debugLog(
@@ -76,6 +78,10 @@ export class FormalSystem {
 		if (currentAST instanceof LetterProp || goalAST instanceof LetterProp) {
 			throw new MatchError('Proposition type mismatch: letter vs non-letter');
 		}
+
+		throw new MatchError(
+			`Unsupported or mismatched proposition types: ${currentAST.constructor.name} vs ${goalAST.constructor.name}`,
+		);
 	}
 	/**
 	 * Match an AST is equal to another AST.
@@ -89,10 +95,10 @@ export class FormalSystem {
 	}
 
 	/**
-	 * Rule modus ponens, which is $0>$1, $0 ⊢ $1.
-	 * @param $0imp$1 $0>$1
-	 * @param $0 $0
-	 * @returns $1
+	 * Rule modus ponens, which is `$0>$1, $0 ⊢ $1.`
+	 * @param $0imp$1 `$0>$1`
+	 * @param $0 `$0`
+	 * @returns `$1`
 	 */
 	static ruleModusPonens($0imp$1: Prop, $0: Prop) {
 		const matchTable: MatchTable = {};
@@ -101,12 +107,20 @@ export class FormalSystem {
 
 		this.match($0, new AnyProp('$0'), matchTable);
 
+		const matchResult = matchTable['$1'];
+		if (matchResult === undefined) throw new ReferenceError('Unable to get $1.');
 		return matchTable['$1'];
 	}
 
+	/**
+	 * Rule A1, which is `⊢$0>($1>$0)`
+	 */
 	static ruleA1($0: Prop, $1: Prop) {
 		return new Impl($0, new Impl($1, $0));
 	}
+	/**
+	 * Rule A2, which is `⊢($0>($1>$2))>(($0>$1)>($0>$2))`
+	 */
 	static ruleA2($0: Prop, $1: Prop, $2: Prop) {
 		return new Impl(
 			new Impl($0, new Impl($1, $2)),
@@ -114,10 +128,18 @@ export class FormalSystem {
 		);
 	}
 
+	/**
+	 * Rule A3, which is `⊢(~$0>~$1)>($1>$0)`
+	 */
 	static ruleA3($0: Prop, $1: Prop) {
 		return new Impl(new Impl(new Not($0), new Not($1)), new Impl($1, $0));
 	}
 
+	/**
+	 * 1st of Definition of 1ff.
+	 *
+	 * `⊢($0<>$1)>~(($0>$1)>~($1>$0))`
+	 */
 	static ruleDefinitionIff1($0: Prop, $1: Prop) {
 		return new Impl(
 			new Iff($0, $1),
@@ -125,6 +147,11 @@ export class FormalSystem {
 		);
 	}
 
+	/**
+	 * 2nd of Definition of 1ff.
+	 *
+	 * `⊢~(($0>$1)>~($1>$0))>($0<>$1)`
+	 */
 	static ruleDefinitionIff2($0: Prop, $1: Prop) {
 		return new Impl(
 			new Not(new Impl(new Impl($0, $1), new Not(new Impl($1, $0)))),
@@ -132,12 +159,18 @@ export class FormalSystem {
 		);
 	}
 
+	/**
+	 * `.i` Theorem.
+	 *
+	 * `⊢$0>$0`
+	 */
 	static ruleDotI($0: Prop) {
 		const theorem1 = this.ruleA1($0, $0);
 		const theorem2 = this.ruleA1($0, new Impl($0, $0));
 		const theorem3 = this.ruleA2($0, new Impl($0, $0), $0);
 		const theorem4 = this.ruleModusPonens(theorem3, theorem2);
 		const theorem5 = this.ruleModusPonens(theorem4, theorem1);
+
 		return theorem5;
 	}
 }
