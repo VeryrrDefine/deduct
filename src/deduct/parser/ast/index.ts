@@ -61,3 +61,29 @@ export class NotPropositionAST extends Proposition {
 		return `[not (${this.prop})]`;
 	}
 }
+
+export class DisjunctionPropositionAST extends Proposition {
+	left: Proposition;
+	right: Proposition;
+	constructor(left: Proposition, right: Proposition) {
+		super();
+		this.left = left;
+		this.right = right;
+	}
+	toString(): string {
+		return `[(${this.left.toString()}) disjunction (${this.right.toString()})]`;
+	}
+}
+
+export class ConjunctionPropositionAST extends Proposition {
+	left: Proposition;
+	right: Proposition;
+	constructor(left: Proposition, right: Proposition) {
+		super();
+		this.left = left;
+		this.right = right;
+	}
+	toString(): string {
+		return `[(${this.left.toString()}) conjunction (${this.right.toString()})]`;
+	}
+}

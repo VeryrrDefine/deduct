@@ -23,8 +23,8 @@ export const RParen = createToken({ name: 'RParen', pattern: /\)/ });
 export const Not = createToken({ name: 'Not', pattern: /~|¬/ });
 
 export const Comma = createToken({ name: 'Comma', pattern: /,/ });
-export const Disjuction = createToken({ name: 'Disjuction', pattern: /∨|\|/ });
-export const Conjuction = createToken({ name: 'Conjuction', pattern: /∧|&/ });
+export const Disjunction = createToken({ name: 'Disjunction', pattern: /∨|\|/ });
+export const Conjunction = createToken({ name: 'Conjunction', pattern: /∧|&/ });
 export const Forall = createToken({ name: 'Forall', pattern: /V|∀/ });
 export const Exists = createToken({ name: 'Exists', pattern: /V|∃/ });
 export const VDash = createToken({ name: 'VDash', pattern: /⊢|\|-/ });
@@ -34,9 +34,11 @@ const Whitespace = createToken({
 	pattern: /\s+/,
 	// This is normally computed automatically...
 	line_breaks: true,
+	group: Lexer.SKIPPED,
 });
 
 export const allTokens = [
+	Whitespace,
 	AnyProposition,
 	LetterProposition,
 	VDash,
@@ -47,11 +49,10 @@ export const allTokens = [
 	Not,
 	LParen,
 	RParen,
-	Whitespace,
 	Forall,
 	Exists,
-	Disjuction,
-	Conjuction,
+	Disjunction,
+	Conjunction,
 ];
 
 export const PropositionLexer = new Lexer(allTokens);

@@ -1,5 +1,8 @@
+import { FormalSystemRule } from '../formalsystem/fsRule';
 import {
 	AnyPropositionAST,
+	ConjunctionPropositionAST,
+	DisjunctionPropositionAST,
 	IffPropositionAST,
 	ImplicationPropositionAST,
 	LetterPropositionAST,
@@ -16,6 +19,15 @@ class CstToAstVisitor extends parserInstance.getBaseCstVisitorConstructor() {
 		this.validateVisitor();
 	}
 
+	fsRule(ctx: any) {
+		const t = this;
+		let last = this.visit(ctx.proposition[ctx.proposition.length - 1]);
+		let conditions = ctx.proposition.slice(0, -1);
+		for (let i = 0; i < conditions.length; i++) {
+			conditions[i] = this.visit(conditions[i]);
+		}
+		return new FormalSystemRule(conditions, last);
+	}
 	proposition(ctx: any) {
 		return this.visit(ctx.iffProposition);
 	}
@@ -28,13 +40,34 @@ class CstToAstVisitor extends parserInstance.getBaseCstVisitorConstructor() {
 			this.visit(ctx.iffProposition),
 		);
 	}
+
 	implicationProposition(ctx: any): any {
 		if (!ctx.implicationProposition) {
-			return this.visit(ctx.notProposition);
+			return this.visit(ctx.disjunctionProposition);
 		}
 		return new ImplicationPropositionAST(
-			this.visit(ctx.notProposition),
+			this.visit(ctx.disjunctionProposition),
 			this.visit(ctx.implicationProposition),
+		);
+	}
+
+	disjunctionProposition(ctx: any): any {
+		if (!ctx.disjunctionProposition) {
+			return this.visit(ctx.conjunctionProposition);
+		}
+		return new DisjunctionPropositionAST(
+			this.visit(ctx.conjunctionProposition),
+			this.visit(ctx.disjunctionProposition),
+		);
+	}
+
+	conjunctionProposition(ctx: any): any {
+		if (!ctx.conjunctionProposition) {
+			return this.visit(ctx.notProposition);
+		}
+		return new ConjunctionPropositionAST(
+			this.visit(ctx.notProposition),
+			this.visit(ctx.conjunctionProposition),
 		);
 	}
 
@@ -64,7 +97,7 @@ class CstToAstVisitor extends parserInstance.getBaseCstVisitorConstructor() {
 	}
 }
 
-export function parseAndConvertToAst(code: string) {
+export function parseAndConvertToAst(code: string, isRule = false) {
 	const lexResult = PropositionLexer.tokenize(code);
 
 	if (lexResult.errors.length > 0) {
@@ -73,7 +106,7 @@ export function parseAndConvertToAst(code: string) {
 
 	const parser = new PropositionParser();
 	parser.input = lexResult.tokens;
-	const cst = parser.iffProposition();
+	const cst = isRule ? parser.fsRule() : parser.proposition();
 
 	if (parser.errors.length > 0) {
 		throw '语法解析出错：' + parser.errors.map((e) => e.message).join(', ');

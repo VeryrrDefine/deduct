@@ -2,12 +2,16 @@ import { CstParser } from 'chevrotain';
 import {
 	allTokens,
 	AnyProposition,
+	Comma,
+	Conjunction,
+	Disjunction,
 	LeftRightarrow,
 	LetterProposition,
 	LParen,
 	Not,
 	Rightarrow,
 	RParen,
+	VDash,
 } from './lexer';
 
 export class PropositionParser extends CstParser {
@@ -16,6 +20,19 @@ export class PropositionParser extends CstParser {
 
 		this.performSelfAnalysis();
 	}
+
+	public fsRule = this.RULE('fsRule', () => {
+		this.OPTION(() => {
+			this.SUBRULE(this.proposition); // 第一个 proposition
+			this.MANY(() => {
+				// 后续可选的 ", proposition"
+				this.CONSUME(Comma);
+				this.SUBRULE2(this.proposition); // 注意使用 SUBRULE2 或 SUBRULE 均可
+			});
+		});
+		this.CONSUME(VDash);
+		this.SUBRULE3(this.proposition);
+	});
 
 	// 完整命题 = 当且仅当命题
 	public proposition = this.RULE('proposition', () => {
@@ -34,11 +51,29 @@ export class PropositionParser extends CstParser {
 
 	// 蕴含命题（右结合）
 	public implicationProposition = this.RULE('implicationProposition', () => {
-		this.SUBRULE(this.notProposition); // 左侧：基础命题
+		this.SUBRULE(this.disjunctionProposition); // 左侧：析取命题
 		this.OPTION(() => {
 			// 可选右侧递归
 			this.CONSUME(Rightarrow);
 			this.SUBRULE2(this.implicationProposition); // 右侧递归实现右结合
+		});
+	});
+
+	public disjunctionProposition = this.RULE('disjunctionProposition', () => {
+		this.SUBRULE(this.conjunctionProposition); // 左侧：合取命题
+		this.OPTION(() => {
+			// 可选右侧递归
+			this.CONSUME(Disjunction);
+			this.SUBRULE2(this.disjunctionProposition);
+		});
+	});
+
+	public conjunctionProposition = this.RULE('conjunctionProposition', () => {
+		this.SUBRULE(this.notProposition); // 左侧：否定命题
+		this.OPTION(() => {
+			// 可选右侧递归
+			this.CONSUME(Conjunction);
+			this.SUBRULE2(this.conjunctionProposition);
 		});
 	});
 
