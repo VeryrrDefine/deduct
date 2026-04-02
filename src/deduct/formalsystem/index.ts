@@ -1,7 +1,9 @@
 import {
 	AnyPropositionAST as AnyProp,
+	IffPropositionAST as Iff,
 	ImplicationPropositionAST as Impl,
 	LetterPropositionAST as LetterProp,
+	NotPropositionAST as Not,
 	type Proposition as Prop,
 } from '../parser/ast';
 class MatchError extends Error {}
@@ -16,7 +18,7 @@ export class FormalSystem {
 	/**
 	 * Match current AST to goal AST
 	 *
-	 * e.g. `$2>$3` can match `t>q`, `$2>$2` can't match `t>q`, t>q can't match `$2>$2`.
+	 * e.g. `t>q` can match `$2>$3`, `t>q` can't match `$2>$2`, `$1` can't match `t`.
 	 * @param currentAST
 	 * @param goalAST
 	 */
@@ -46,6 +48,23 @@ export class FormalSystem {
 		// 如果一个是蕴含另一个不是，则抛出类型不匹配
 		if (currentAST instanceof Impl || goalAST instanceof Impl) {
 			throw new MatchError('Proposition type mismatch: implication vs non-implication');
+		}
+
+		if (currentAST instanceof Iff && goalAST instanceof Iff) {
+			this.match(currentAST.left, goalAST.left, anyPropositionMap);
+			this.match(currentAST.right, goalAST.right, anyPropositionMap);
+			FormalSystem.debugLog(`Matched iff: ${currentAST} and ${goalAST}`);
+			return;
+		}
+		// 如果一个是当且仅当另一个不是，则抛出类型不匹配
+		if (currentAST instanceof Iff || goalAST instanceof Iff) {
+			throw new MatchError('Proposition type mismatch: iff vs non-iff');
+		}
+
+		if (currentAST instanceof Not && goalAST instanceof Not) {
+			this.match(currentAST.prop, goalAST.prop, anyPropositionMap);
+			FormalSystem.debugLog(`Matched not: ${currentAST} and ${goalAST}`);
+			return;
 		}
 
 		if (currentAST instanceof LetterProp && goalAST instanceof LetterProp) {
