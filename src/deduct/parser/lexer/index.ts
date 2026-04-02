@@ -6,7 +6,7 @@ export const AnyProposition = createToken({
 
 export const LetterProposition = createToken({
 	name: 'LetterProposition',
-	pattern: /[a-zA-Z_][a-zA-Z0-9_]*/,
+	pattern: /[a-z_][a-zA-Z0-9_]*/,
 });
 
 export const LeftRightarrow = createToken({
@@ -22,6 +22,13 @@ export const LParen = createToken({ name: 'LParen', pattern: /\(/ });
 export const RParen = createToken({ name: 'RParen', pattern: /\)/ });
 export const Not = createToken({ name: 'Not', pattern: /~|¬/ });
 
+export const Comma = createToken({ name: 'Comma', pattern: /,/ });
+export const Disjuction = createToken({ name: 'Disjuction', pattern: /∨|\|/ });
+export const Conjuction = createToken({ name: 'Conjuction', pattern: /∧|&/ });
+export const Forall = createToken({ name: 'Forall', pattern: /V|∀/ });
+export const Exists = createToken({ name: 'Exists', pattern: /V|∃/ });
+export const VDash = createToken({ name: 'VDash', pattern: /⊢|\|-/ });
+export const VDashDouble = createToken({ name: 'VDashDouble', pattern: /⊨|\|=/ });
 const Whitespace = createToken({
 	name: 'Whitespace',
 	pattern: /\s+/,
@@ -32,12 +39,19 @@ const Whitespace = createToken({
 export const allTokens = [
 	AnyProposition,
 	LetterProposition,
+	VDash,
+	VDashDouble,
+	Comma,
 	LeftRightarrow,
 	Rightarrow,
 	Not,
 	LParen,
 	RParen,
 	Whitespace,
+	Forall,
+	Exists,
+	Disjuction,
+	Conjuction,
 ];
 
 export const PropositionLexer = new Lexer(allTokens);
