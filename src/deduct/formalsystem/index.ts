@@ -6,11 +6,10 @@ import {
 	NotPropositionAST as Not,
 	type Proposition as Prop,
 } from '../parser/ast';
-class MatchError extends Error {}
-class LogicError extends Error {}
-type MatchTable = {
-	[key: string]: Prop;
-};
+import { parseAndConvertToAst } from '../parser/compiler';
+import { LogicError, MatchError } from './errors';
+import type { MatchTable } from './matchTable';
+
 export class FormalSystem {
 	static debugLog(...args: any[]) {
 		return;
@@ -182,3 +181,5 @@ export class FormalSystem {
 		return theorem5;
 	}
 }
+
+// console.log(RULES());
