@@ -114,6 +114,24 @@ export class FormalSystem {
 		);
 	}
 
+	static ruleA3($0: Prop, $1: Prop) {
+		return new Impl(new Impl(new Not($0), new Not($1)), new Impl($1, $0));
+	}
+
+	static ruleDefinitionIff1($0: Prop, $1: Prop) {
+		return new Impl(
+			new Iff($0, $1),
+			new Not(new Impl(new Impl($0, $1), new Not(new Impl($1, $0)))),
+		);
+	}
+
+	static ruleDefinitionIff2($0: Prop, $1: Prop) {
+		return new Impl(
+			new Not(new Impl(new Impl($0, $1), new Not(new Impl($1, $0)))),
+			new Iff($0, $1),
+		);
+	}
+
 	static ruleDotI($0: Prop) {
 		const theorem1 = this.ruleA1($0, $0);
 		const theorem2 = this.ruleA1($0, new Impl($0, $0));
