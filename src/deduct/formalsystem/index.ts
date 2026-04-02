@@ -12,7 +12,7 @@ import type { MatchTable } from './matchTable';
 
 export class FormalSystem {
 	static debugLog(...args: any[]) {
-		return;
+		// return;
 		return console.debug(...args);
 	}
 	/**

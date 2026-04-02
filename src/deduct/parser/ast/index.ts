@@ -2,7 +2,7 @@ export class Proposition {
 	toString() {
 		return '[bx]';
 	}
-	replaceAnyProposition(x: string, replaceTo: Proposition): Proposition {
+	replaceAnyProposition(x: string, replaceTo: Proposition, ispreapply = false): Proposition {
 		return this;
 	}
 	clone() {
@@ -38,12 +38,35 @@ export class AnyPropositionAST extends Proposition {
 	toString(): string {
 		return `($${this.name})`;
 	}
-	replaceAnyProposition(x: string, replaceTo: Proposition): Proposition {
-		if (this.name == x) return replaceTo;
+	replaceAnyProposition(x: string, replaceTo: Proposition, ispreapply = false): Proposition {
+		if (!ispreapply) {
+			return new AnyPropositionPreApplyAST(this.name);
+		}
 		return this;
 	}
 	clone() {
 		return new AnyPropositionAST(this.name);
+	}
+	findAnyProposition(): string[] {
+		return [];
+	}
+}
+
+export class AnyPropositionPreApplyAST extends Proposition {
+	name;
+	constructor(name?: string) {
+		super();
+		this.name = name ?? '';
+	}
+	toString(): string {
+		return `(!${this.name})`;
+	}
+	replaceAnyProposition(x: string, replaceTo: Proposition, ispreapply = false): Proposition {
+		if (ispreapply && this.name == x) return replaceTo;
+		return this;
+	}
+	clone() {
+		return new AnyPropositionPreApplyAST(this.name);
 	}
 	findAnyProposition(): string[] {
 		return [this.name];
@@ -61,10 +84,10 @@ export class ImplicationPropositionAST extends Proposition {
 	toString(): string {
 		return `((${this.left.toString()})→(${this.right.toString()}))`;
 	}
-	replaceAnyProposition(x: string, replaceTo: Proposition): Proposition {
+	replaceAnyProposition(x: string, replaceTo: Proposition, ispreapply = false): Proposition {
 		return new ImplicationPropositionAST(
-			this.left.replaceAnyProposition(x, replaceTo),
-			this.right.replaceAnyProposition(x, replaceTo),
+			this.left.replaceAnyProposition(x, replaceTo, ispreapply),
+			this.right.replaceAnyProposition(x, replaceTo, ispreapply),
 		);
 	}
 	clone() {
@@ -86,10 +109,10 @@ export class IffPropositionAST extends Proposition {
 	toString(): string {
 		return `((${this.left.toString()})↔(${this.right.toString()}))`;
 	}
-	replaceAnyProposition(x: string, replaceTo: Proposition): Proposition {
+	replaceAnyProposition(x: string, replaceTo: Proposition, ispreapply = false): Proposition {
 		return new IffPropositionAST(
-			this.left.replaceAnyProposition(x, replaceTo),
-			this.right.replaceAnyProposition(x, replaceTo),
+			this.left.replaceAnyProposition(x, replaceTo, ispreapply),
+			this.right.replaceAnyProposition(x, replaceTo, ispreapply),
 		);
 	}
 	clone() {
@@ -109,8 +132,8 @@ export class NotPropositionAST extends Proposition {
 	toString(): string {
 		return `(¬(${this.prop}))`;
 	}
-	replaceAnyProposition(x: string, replaceTo: Proposition): Proposition {
-		return new NotPropositionAST(this.prop.replaceAnyProposition(x, replaceTo));
+	replaceAnyProposition(x: string, replaceTo: Proposition, ispreapply = false): Proposition {
+		return new NotPropositionAST(this.prop.replaceAnyProposition(x, replaceTo, ispreapply));
 	}
 	clone() {
 		return new NotPropositionAST(this.prop.clone());
@@ -131,10 +154,10 @@ export class DisjunctionPropositionAST extends Proposition {
 	toString(): string {
 		return `((${this.left.toString()})∨(${this.right.toString()}))`;
 	}
-	replaceAnyProposition(x: string, replaceTo: Proposition): Proposition {
+	replaceAnyProposition(x: string, replaceTo: Proposition, ispreapply = false): Proposition {
 		return new DisjunctionPropositionAST(
-			this.left.replaceAnyProposition(x, replaceTo),
-			this.right.replaceAnyProposition(x, replaceTo),
+			this.left.replaceAnyProposition(x, replaceTo, ispreapply),
+			this.right.replaceAnyProposition(x, replaceTo, ispreapply),
 		);
 	}
 	clone() {
@@ -156,10 +179,10 @@ export class ConjunctionPropositionAST extends Proposition {
 	toString(): string {
 		return `((${this.left.toString()})∧(${this.right.toString()}))`;
 	}
-	replaceAnyProposition(x: string, replaceTo: Proposition): Proposition {
+	replaceAnyProposition(x: string, replaceTo: Proposition, ispreapply = false): Proposition {
 		return new ConjunctionPropositionAST(
-			this.left.replaceAnyProposition(x, replaceTo),
-			this.right.replaceAnyProposition(x, replaceTo),
+			this.left.replaceAnyProposition(x, replaceTo, ispreapply),
+			this.right.replaceAnyProposition(x, replaceTo, ispreapply),
 		);
 	}
 	clone() {

@@ -1,5 +1,5 @@
 import { FormalSystem } from './index';
-import type { Proposition } from '../parser/ast';
+import { Proposition } from '../parser/ast';
 import { LogicError } from './errors';
 import type { MatchTable } from './matchTable';
 import { parseAndConvertToAst } from '../parser/compiler';
@@ -18,20 +18,20 @@ export class FormalSystemRule {
 			throw new LogicError("Proposition numbers doesn't match");
 
 		const matchTable: MatchTable = {};
-		const fixed = [];
 		for (let i = 0; i < this.conditionNumber; i++) {
 			FormalSystem.match(propositions[i], this.condition[i], matchTable);
-			fixed.push(...propositions[i].findAnyProposition());
 		}
 
-		let result = this.result.clone();
-
+		let result = this.result.clone().replaceAnyProposition('', new Proposition(), false);
+		FormalSystem.debugLog(`Rule result before replaced: ${result}`);
 		const keys = Object.keys(matchTable);
 
 		for (const key of keys) {
-			result = result.replaceAnyProposition(key, matchTable[key]);
+			FormalSystem.debugLog(`Replacing result ${key} to ${matchTable[key]}`);
+			result = result.replaceAnyProposition(key, matchTable[key], true);
 		}
-		return new RuleResult(result, fixed);
+		FormalSystem.debugLog(`Fin: ${result}`);
+		return new RuleResult(result);
 	}
 	toString() {
 		let result = this.condition.map((x) => x.toString()).join(',');
@@ -47,18 +47,16 @@ export class FormalSystemRule {
 export class RuleResult {
 	result: Proposition;
 	replaceable: string[];
-	constructor(result: Proposition, fixed: string[]) {
+	constructor(result: Proposition) {
 		this.result = result;
-		this.replaceable = [...new Set(result.findAnyProposition())].filter(
-			(x) => !fixed.includes(x),
-		);
+		this.replaceable = [...new Set(result.findAnyProposition())];
 	}
 	applyResult(tables: MatchTable) {
 		const keys = Object.keys(tables);
 		let result = this.result.clone();
 		for (const key of keys) {
 			if (!tables[key]) continue;
-			result = result.replaceAnyProposition(key, tables[key]);
+			result = result.replaceAnyProposition(key, tables[key], true);
 		}
 		return result;
 	}
