@@ -1,13 +1,12 @@
-import { parseAndConvertToAst } from '../parser/compiler';
-import type { FormalSystemRule } from './fsRule';
+import { FormalSystemRule } from './fsRule';
 
 export const RULES = {
-	mp: parseAndConvertToAst('$0>$1, $0|-$1', true) as FormalSystemRule,
-	a1: parseAndConvertToAst('|-$0>($1>$0)', true) as FormalSystemRule,
-	a2: parseAndConvertToAst('|-($0>($1>$2))>(($0>$1)>($0>$2))', true) as FormalSystemRule,
-	a3: parseAndConvertToAst('|-(~$0>~$1)>($1>$0)', true) as FormalSystemRule,
-	'd<>1': parseAndConvertToAst('|-($0<>$1)>~(($0>$1)>~($1>$0))', true) as FormalSystemRule,
-	'd<>2': parseAndConvertToAst('|-~(($0>$1)>~($1>$0))>($0<>$1)', true) as FormalSystemRule,
-	'd|': parseAndConvertToAst('⊢($0|$1)<>(~$0>$1)', true) as FormalSystemRule,
-	'd&': parseAndConvertToAst('⊢($0&$1)<>~($0>~$1)', true) as FormalSystemRule,
+	mp: FormalSystemRule.fromString('$0>$1, $0|-$1'),
+	a1: FormalSystemRule.fromString('|-$0>($1>$0)'),
+	a2: FormalSystemRule.fromString('|-($0>($1>$2))>(($0>$1)>($0>$2))'),
+	a3: FormalSystemRule.fromString('|-(~$0>~$1)>($1>$0)'),
+	'd<>1': FormalSystemRule.fromString('|-($0<>$1)>~(($0>$1)>~($1>$0))'),
+	'd<>2': FormalSystemRule.fromString('|-~(($0>$1)>~($1>$0))>($0<>$1)'),
+	'd|': FormalSystemRule.fromString('⊢($0|$1)<>(~$0>$1)'),
+	'd&': FormalSystemRule.fromString('⊢($0&$1)<>~($0>~$1)'),
 };

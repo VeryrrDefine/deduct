@@ -2,6 +2,7 @@ import { FormalSystem } from './index';
 import type { Proposition } from '../parser/ast';
 import { LogicError } from './errors';
 import type { MatchTable } from './matchTable';
+import { parseAndConvertToAst } from '../parser/compiler';
 
 export class FormalSystemRule {
 	condition: Proposition[];
@@ -36,6 +37,9 @@ export class FormalSystemRule {
 		result += this.result.toString();
 
 		return result;
+	}
+	static fromString(x: string): FormalSystemRule {
+		return parseAndConvertToAst(x, true);
 	}
 }
 export class RuleResult {
