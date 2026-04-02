@@ -3,16 +3,33 @@ import { Proposition } from '../parser/ast';
 import { LogicError } from './errors';
 import type { MatchTable } from './matchTable';
 import { parseAndConvertToAst } from '../parser/compiler';
+import type { Step, StepJSON } from './step';
+import { findRules } from './rules';
 
+export type TheoremJSON = {
+	condition: string[];
+	result: string;
+	steps: StepJSON[];
+};
 export class FormalSystemRule {
 	condition: Proposition[];
 	result: Proposition;
 	conditionNumber: number;
+	steps: Step[];
+	isTheorem = false;
 	constructor(condition: Proposition[], result: Proposition) {
 		this.condition = condition;
 		this.result = result;
 		this.conditionNumber = condition.length;
+		this.steps = [];
 	}
+	static asTheorem(condition: Proposition[], result: Proposition, steps: Step[]) {
+		const rule = new FormalSystemRule(condition, result);
+		rule.steps = steps;
+		rule.isTheorem = true;
+		return rule;
+	}
+
 	applyRule(...propositions: Proposition[]) {
 		if (propositions.length !== this.conditionNumber)
 			throw new LogicError("Proposition numbers doesn't match");

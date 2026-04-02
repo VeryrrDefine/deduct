@@ -1,43 +1,108 @@
 import readline from 'node:readline';
-import { FormalSystem } from '../deduct/formalsystem';
-import type { RequestListener } from 'node:http';
-import type { Proposition } from '../deduct/parser/ast';
 import { parseAndConvertToAst } from '../deduct/parser/compiler';
-import { RULES } from '../deduct/formalsystem/rules';
-import type { RuleResult } from '../deduct/formalsystem/fsRule';
+import { findRules, RULES, userTheorems } from '../deduct/formalsystem/rules';
+import { FormalSystemRule, type RuleResult, type TheoremJSON } from '../deduct/formalsystem/fsRule';
 import type { MatchStrTable, MatchTable } from '../deduct/formalsystem/matchTable';
-
+import type { Step } from '../deduct/formalsystem/step';
+import { TheoremJSONHandler } from '../deduct/formalsystem/theorem-json-handler';
+import fs from 'node:fs/promises';
+import { LogicError } from '../deduct/formalsystem/errors';
 const rl = readline.createInterface({
 	input: process.stdin,
 	output: process.stdout,
 });
 
-type Steps = {
-	proposition: Proposition;
-	rule_id: string;
-	chosen_condition: number[];
-	match_map: MatchStrTable;
-};
 /** 证明步骤 */
-let steps: Steps[] = [];
+let steps: Step[] = [];
 
 /**
- * 查找规则
+ * 将一个步骤移动到后一步的步骤
+ * @param direction 方向，true为+1,false为-1
  */
-function findRules(x: string) {
-	if (!(x in RULES)) throw new ReferenceError('Cannot find rule ' + x);
-	let y = x as keyof typeof RULES;
-	return RULES[y];
+function moveStepFromto(src: number, direction = true) {
+	if (steps.length - 1 == src && direction) return;
+	if (src == 0 && !direction) return;
+	if (direction) {
+		// 如果前方的命题需要这个src命题，那么报错
+		if (steps[src + 1].chosen_condition.includes(src)) {
+			throw new LogicError('Unable to move: next proposition required');
+		}
+		// 把所有依赖src+1的命题修改成src，把所有依赖src的命题修改成src+1
+		for (let i = src + 2; i < steps.length - 1; i++) {
+			const curstep = steps[i];
+			curstep.chosen_condition = curstep.chosen_condition.map((x) =>
+				x == src + 1 ? src : x == src ? src + 1 : x,
+			);
+		}
+		let temp = steps[src];
+		let temp2 = steps[src + 1];
+		steps[src] = temp2;
+		steps[src + 1] = temp;
+	} else {
+		// 把所有依赖src-1的命题修改成src，把所有依赖src的命题修改成src-1
+		for (let i = src + 1; i < steps.length - 1; i++) {
+			const curstep = steps[i];
+			curstep.chosen_condition = curstep.chosen_condition.map((x) =>
+				x == src - 1 ? src : x == src ? src - 1 : x,
+			);
+		}
+		let temp = steps[src];
+		let temp2 = steps[src - 1];
+		steps[src] = temp2;
+		steps[src - 1] = temp;
+	}
 }
+async function saveTheorems(filename: string = 'proofs.json') {
+	const data = userTheorems;
+	const keys = Object.keys(data);
+	let result: Record<string, TheoremJSON> = {};
+	for (const key of keys) {
+		result[key] = TheoremJSONHandler.theoremToJSON(data[key]);
+	}
+
+	await fs.writeFile(filename, JSON.stringify(result, null, 2), 'utf-8');
+	console.log('Saved successfully');
+	return result;
+}
+
+async function loadTheorems(filename: string = 'proofs.json') {
+	const data = await fs.readFile(filename, 'utf-8');
+	const proofs = JSON.parse(data);
+
+	let replace: {
+		[key: string]: FormalSystemRule;
+	} = {};
+	for (const key in proofs) {
+		replace[key] = TheoremJSONHandler.JSONTOTheorem(proofs[key]);
+	}
+	for (const key in userTheorems) {
+		delete userTheorems[key];
+	}
+	for (const key in replace) {
+		userTheorems[key] = replace[key];
+	}
+	console.log('Loaded successfully');
+}
+
 async function replQuestion() {
 	while (true) {
 		const answer = await ask('>>> ');
 		const command = answer.trim();
+		if (command === 'help') {
+			console.log(
+				`Help\nexit\t\t\tExit this program\npop\t\t\tremove the last theorem\nclear\t\t\tclear all theorems\nlist\t\t\tList Proof steps\nrules\t\t\tList theorems & axioms\ntheorem\t\t\tCreate Theorem from current step\n[RULENAME]\t\tApply theorems/axioms\nsave\t\t\tSave your theorems to proofs.json\nload\t\t\tLoad your theorems from proofs.json`,
+			);
+			continue;
+		}
 		if (command === 'exit') break;
 		if (command === 'rules') {
 			for (const key in RULES) {
 				//@ts-ignore
 				console.log(`${key}\t\t${RULES[key].toString()}`);
+			}
+			for (const key in userTheorems) {
+				//@ts-ignore
+				console.log(`${key}\t\t${userTheorems[key].toString()}`);
 			}
 			continue;
 		}
@@ -46,7 +111,7 @@ async function replQuestion() {
 			console.log('Poped a theorem.');
 			continue;
 		}
-		if (command == 'claer') {
+		if (command == 'clear') {
 			steps = [];
 			console.log('Cleared.');
 			continue;
@@ -58,6 +123,51 @@ async function replQuestion() {
 			}
 			continue;
 		}
+		if (command === 'save') {
+			await saveTheorems();
+			continue;
+		}
+		if (command === 'load') {
+			await loadTheorems();
+			continue;
+		}
+		if (command === 'hyp') {
+			const hyp = await ask('Enter Hypothesis');
+			steps.push({
+				proposition: parseAndConvertToAst(hyp),
+				rule_id: 'hyp',
+				chosen_condition: [],
+				match_map: {},
+			});
+			continue;
+		}
+		if (command.startsWith('theorem')) {
+			const parts = command.split(' ');
+			if (parts.length < 2) {
+				console.error('Usage: theorem s<name> [stepId]');
+				continue;
+			}
+			const name = parts[1];
+			// 如果没有输入stepId,默认取最后一个
+			const stepId = Number(parts[2] || steps.length - 1);
+			if (isNaN(stepId) || !steps[stepId]) {
+				console.error('Invalid step ID');
+				continue;
+			}
+			if (!name.startsWith('s')) {
+				console.error("User Theorem must starts with 's'");
+				continue;
+			}
+			let hypothesis = steps.filter((x) => x.rule_id == 'hyp').map((x) => x.proposition);
+			userTheorems[name] = FormalSystemRule.asTheorem(
+				hypothesis,
+				steps[stepId].proposition,
+				steps,
+			);
+			console.log(`Added theorem "${name}" -> ${steps[stepId].proposition}`);
+			continue;
+		}
+
 		try {
 			const rule = findRules(command);
 			const conditions = [];

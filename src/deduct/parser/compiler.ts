@@ -93,7 +93,7 @@ class CstToAstVisitor extends parserInstance.getBaseCstVisitorConstructor() {
 		return new LetterPropositionAST(ctx.LetterProposition[0].image);
 	}
 	anyProposition(ctx: any): any {
-		return new AnyPropositionAST(ctx.AnyProposition[0].image);
+		return new AnyPropositionAST(ctx.AnyProposition[0].image.slice(1));
 	}
 }
 
