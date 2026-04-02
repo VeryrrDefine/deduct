@@ -12,14 +12,9 @@ const rl = readline.createInterface({
 	output: process.stdout,
 });
 
-// const RULES = {
-// 	// mp: {
-// 	// 	condition: ['$0>$1', '$0'],
-// 	// 	result: ['$1'],
-// 	// 	program: FormalSystem.ruleModusPonens.bind(FormalSystem),
-// 	// },
-// };
-
+/**
+ * 查找规则
+ */
 function findRules(x: string) {
 	if (!(x in RULES)) throw new ReferenceError('Cannot find rule ' + x);
 	let y = x as keyof typeof RULES;
@@ -27,6 +22,10 @@ function findRules(x: string) {
 }
 let replacements = {} as MatchTable;
 let replacementIndex = 0;
+
+/**
+ * 应用规则的第二步：对部分$0,$1标记进行替换，输出最终命题
+ */
 function replApplyRuleReplacement(x: RuleResult) {
 	if (replacementIndex >= x.replaceable.length) {
 		let result = x.applyResult(replacements);
@@ -51,12 +50,16 @@ function replApplyRuleReplacement(x: RuleResult) {
 }
 let conditions = [] as Proposition[];
 let conditionIndex = 0;
+/**
+ * 应用规则的第一步：检查规则的条件，输出规则的结果（未应用）
+ */
 function replApplyRule(x: (typeof RULES)[keyof typeof RULES]) {
 	if (conditionIndex >= x.conditionNumber) {
 		let result = x.applyRule(...conditions);
 
 		conditions = [];
 		conditionIndex = 0;
+		//开始替换$0,$1标记
 		replApplyRuleReplacement(result);
 		return;
 	} else {
@@ -64,6 +67,8 @@ function replApplyRule(x: (typeof RULES)[keyof typeof RULES]) {
 			try {
 				conditions[conditionIndex] = parseAndConvertToAst(answer);
 				conditionIndex++;
+
+				// 继续条件检查
 				replApplyRule(x);
 			} catch (e) {
 				console.error(e);
@@ -74,6 +79,7 @@ function replApplyRule(x: (typeof RULES)[keyof typeof RULES]) {
 		});
 	}
 }
+
 function replQuestion() {
 	rl.question('>>> ', function (answer) {
 		try {
