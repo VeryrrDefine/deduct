@@ -54,7 +54,7 @@ export class FormalSystem {
 			}
 			return;
 		}
-		if (currentAST instanceof Impl || goalAST instanceof Impl) {
+		if (currentAST instanceof LetterProp || goalAST instanceof LetterProp) {
 			throw new MatchError('Proposition type mismatch: letter vs non-letter');
 		}
 	}
