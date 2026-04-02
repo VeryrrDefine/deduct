@@ -18,8 +18,10 @@ export class FormalSystemRule {
 			throw new LogicError("Proposition numbers doesn't match");
 
 		const matchTable: MatchTable = {};
+		const fixed = [];
 		for (let i = 0; i < this.conditionNumber; i++) {
 			FormalSystem.match(propositions[i], this.condition[i], matchTable);
+			fixed.push(...propositions[i].findAnyProposition());
 		}
 
 		let result = this.result.clone();
@@ -29,7 +31,7 @@ export class FormalSystemRule {
 		for (const key of keys) {
 			result = result.replaceAnyProposition(key, matchTable[key]);
 		}
-		return new RuleResult(result);
+		return new RuleResult(result, fixed);
 	}
 	toString() {
 		let result = this.condition.map((x) => x.toString()).join(',');
@@ -45,9 +47,11 @@ export class FormalSystemRule {
 export class RuleResult {
 	result: Proposition;
 	replaceable: string[];
-	constructor(result: Proposition) {
+	constructor(result: Proposition, fixed: string[]) {
 		this.result = result;
-		this.replaceable = [...new Set(result.findAnyProposition())];
+		this.replaceable = [...new Set(result.findAnyProposition())].filter(
+			(x) => !fixed.includes(x),
+		);
 	}
 	applyResult(tables: MatchTable) {
 		const keys = Object.keys(tables);

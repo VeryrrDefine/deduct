@@ -20,93 +20,42 @@ function findRules(x: string) {
 	let y = x as keyof typeof RULES;
 	return RULES[y];
 }
-let replacements = {} as MatchTable;
-let replacementIndex = 0;
-
-/**
- * 应用规则的第二步：对部分$0,$1标记进行替换，输出最终命题
- */
-function replApplyRuleReplacement(x: RuleResult) {
-	if (replacementIndex >= x.replaceable.length) {
-		let result = x.applyResult(replacements);
-		console.log(`Result: ${result}`);
-		replacements = {};
-		replacementIndex = 0;
-		replQuestion();
-	} else {
-		rl.question(`Apply ${x.replaceable[replacementIndex]}:`, function (answer) {
-			try {
-				replacements[x.replaceable[replacementIndex]] = parseAndConvertToAst(answer);
-				replacementIndex++;
-				replApplyRuleReplacement(x);
-			} catch (e) {
-				console.error(e);
-				replacements = {};
-				replacementIndex = 0;
-				replQuestion();
+async function replQuestion() {
+	while (true) {
+		const answer = await ask('>>> ');
+		const command = answer.trim();
+		if (command === '.exit') break;
+		if (command === 'rules') {
+			for (const key in RULES) {
+				//@ts-ignore
+				console.log(`${key}\t\t${RULES[key].toString()}`);
 			}
-		});
-	}
-}
-let conditions = [] as Proposition[];
-let conditionIndex = 0;
-/**
- * 应用规则的第一步：检查规则的条件，输出规则的结果（未应用）
- */
-function replApplyRule(x: (typeof RULES)[keyof typeof RULES]) {
-	if (conditionIndex >= x.conditionNumber) {
-		let result = x.applyRule(...conditions);
-
-		conditions = [];
-		conditionIndex = 0;
-		//开始替换$0,$1标记
-		replApplyRuleReplacement(result);
-		return;
-	} else {
-		rl.question(`Condition ${x.condition[conditionIndex]}: `, function (answer) {
-			try {
-				conditions[conditionIndex] = parseAndConvertToAst(answer);
-				conditionIndex++;
-
-				// 继续条件检查
-				replApplyRule(x);
-			} catch (e) {
-				console.error(e);
-				conditions = [];
-				conditionIndex = 0;
-				replQuestion();
-			}
-		});
-	}
-}
-
-function replQuestion() {
-	rl.question('>>> ', function (answer) {
+			continue;
+		}
 		try {
-			const command = answer;
-			if (command == '.exit') {
-				rl.close();
-				return;
+			const rule = findRules(command);
+			const conditions = [];
+			for (let i = 0; i < rule.conditionNumber; i++) {
+				const cond = await ask(`Condition ${rule.condition[i]}: `);
+				conditions.push(parseAndConvertToAst(cond));
 			}
-
-			if (command == 'rules') {
-				const keys = Object.keys(RULES);
-				for (const key of keys) {
-					// @ts-ignore
-					console.log(key + '\t\t' + RULES[key].toString());
-				}
-				replQuestion();
-				return;
+			const ruleResult = rule.applyRule(...conditions);
+			const replacements: MatchTable = {};
+			for (let i = 0; i < ruleResult.replaceable.length; i++) {
+				const repl = await ask(`Apply ${ruleResult.replaceable[i]}: `);
+				replacements[ruleResult.replaceable[i]] = parseAndConvertToAst(repl);
 			}
-			let tryFind = findRules(command);
-			replApplyRule(tryFind);
-			replQuestion();
-			return;
+			const result = ruleResult.applyResult(replacements);
+			console.log(`Result: ${result}`);
 		} catch (e) {
 			console.error(e);
-			replQuestion();
 		}
-	});
+	}
+	rl.close();
+}
+
+function ask(question: string): Promise<string> {
+	return new Promise((resolve) => rl.question(question, resolve));
 }
 
 export function replMain() {
