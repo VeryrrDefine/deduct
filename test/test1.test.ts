@@ -1,8 +1,12 @@
-import { FormalSystem } from '../src/deduct/formalsystem';
-import { RULES } from '../src/deduct/formalsystem/rules';
-import { ImplicationPropositionAST, LetterPropositionAST } from '../src/deduct/parser/ast';
-import { parseAndConvertToAst } from '../src/deduct/parser/compiler';
-import deduct from '../src/index';
+// import { FormalSystem } from '../src/deduct/formalsystem';
+// import { RULES } from '../src/deduct/formalsystem/rules';
+// import { ImplicationPropositionAST, LetterPropositionAST } from '../src/deduct/parser/ast';
+// import { parseAndConvertToAst } from '../src/deduct/parser/compiler';
+// import deduct from '../src/index';
+
+import { replMain } from '../src/repl';
+
+replMain();
 
 // describe("init", function () {
 // it("2", function () {
@@ -56,12 +60,6 @@ import deduct from '../src/index';
 // console.log(applied3.toString());
 // const result3 = applied3.applyResult({});
 // console.log(result3.toString());
-
-const keys = Object.keys(RULES);
-for (const key of keys) {
-	// @ts-ignore
-	console.log(key + '\t\t' + RULES[key].toString());
-}
 
 // const matchmap = {};
 // const trytomatch = FormalSystem.match(ast3, ast2, matchmap);

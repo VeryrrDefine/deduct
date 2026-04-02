@@ -53,6 +53,7 @@ export class RuleResult {
 		const keys = Object.keys(tables);
 		let result = this.result.clone();
 		for (const key of keys) {
+			if (!tables[key]) continue;
 			result = result.replaceAnyProposition(key, tables[key]);
 		}
 		return result;
