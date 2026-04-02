@@ -101,6 +101,9 @@ export class FormalSystem {
 	 * @returns `$1`
 	 */
 	static ruleModusPonens($0imp$1: Prop, $0: Prop) {
+		if (!($0imp$1 instanceof Impl)) {
+			throw new LogicError('$0imp$1 is not implication proposition.');
+		}
 		const matchTable: MatchTable = {};
 		FormalSystem.debugLog(`Matching modus ponens: ${$0imp$1}, ${$0} ⊢ ???`);
 		this.match($0imp$1, new Impl(new AnyProp('$0'), new AnyProp('$1')), matchTable);
