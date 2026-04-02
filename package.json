@@ -12,6 +12,7 @@
   "license": "MIT",
   "type": "module",
   "devDependencies": {
+    "@types/node": "^25.5.0",
     "rolldown": "^1.0.0-rc.3",
     "typescript": "^5.9.3"
   },
