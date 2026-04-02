@@ -106,25 +106,3 @@ function replQuestion() {
 export function replMain() {
 	replQuestion();
 }
-
-// const questions = [
-//   '你叫什么名字？',
-//   '你今年多大了？',
-//   '你最喜欢的编程语言是什么？'
-// ];
-
-// const answers = [];
-
-// function askQuestion(i = 0) {
-//   if (i >= questions.length) {
-//     console.log('谢谢你的回答：', answers);
-//     return rl.close();
-//   }
-
-//   rl.question(questions[i], (answer) => {
-//     answers.push(answer);
-//     askQuestion(i + 1);
-//   });
-// }
-
-// askQuestion();
