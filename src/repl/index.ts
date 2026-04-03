@@ -18,6 +18,132 @@ let hypothesis: Proposition[] = [];
 /** 证明步骤 */
 let steps: Step[] = [];
 
+// ==================== 移动步骤的辅助函数 ====================
+
+/**
+ * 检查移动步骤 src 到 dst 是否合法
+ * @param src 当前索引
+ * @param dst 目标索引
+ * @returns true 如果合法
+ */
+function moveStepFromtoPrecheck(src: number, dst: number): boolean {
+	if (src === dst) return false;
+	if (src < 0 || src >= steps.length) return false;
+	if (dst < 0 || dst >= steps.length) return false;
+
+	if (src < dst) {
+		// 检查 dst 之前的步骤（实际上是在 src+1 到 dst 之间）是否依赖 src
+		const len = steps.length;
+		for (let i = src + 1; i <= dst; i++) {
+			const step = steps[i];
+			for (const ref of step.chosen_condition) {
+				if (ref < 0 && ref + len === src) {
+					console.error(`Move blocked: step ${i} depends on step ${src}`);
+					return false;
+				}
+			}
+		}
+	}
+	return true;
+}
+
+/**
+ * 更新某个步骤的 chosen_condition 中引用的步骤索引（由于数组顺序变化）
+ * @param cond 步骤的 chosen_condition 数组（会直接修改）
+ * @param oldIndex 原步骤索引
+ * @param newIndex 新步骤索引
+ * @param stepsLenBeforeMove 移动前的 steps 长度
+ */
+function updateChosenConditionRefs(
+	cond: number[],
+	oldIndex: number,
+	newIndex: number,
+	stepsLenBeforeMove: number,
+) {
+	for (let i = 0; i < cond.length; i++) {
+		const ref = cond[i];
+		if (ref >= 0) continue; // hypothesis 引用不变
+		const originalStepIndex = ref + stepsLenBeforeMove;
+		if (originalStepIndex === oldIndex) {
+			// 更新为新的步骤索引（存储为负数）
+			cond[i] = newIndex - stepsLenBeforeMove;
+		}
+	}
+}
+
+/**
+ * 移动步骤：将 steps[src] 移动到 steps[dst] 位置，并调整所有受影响的步骤的引用
+ * @param src 当前索引
+ * @param dst 目标索引
+ * @param forward true 表示向后移动（src < dst），false 表示向前移动（src > dst）
+ */
+function moveStepFromto(src: number, dst: number, forward: boolean) {
+	const stepsLenBefore = steps.length;
+	// 取出要移动的步骤
+	const movedStep = steps[src];
+
+	if (forward) {
+		// 向后移动：src < dst，将元素移到后面
+		// 将 src+1 .. dst 的元素向左移动一位
+		for (let i = src; i < dst; i++) {
+			steps[i] = steps[i + 1];
+		}
+		steps[dst] = movedStep;
+	} else {
+		// 向前移动：src > dst，将元素移到前面
+		// 将 dst .. src-1 的元素向右移动一位
+		for (let i = src; i > dst; i--) {
+			steps[i] = steps[i - 1];
+		}
+		steps[dst] = movedStep;
+	}
+
+	// 更新所有受影响的步骤中的 chosen_condition 引用
+	// 受影响的步骤包括：
+	// 1. 被移动的步骤自身（它的 chosen_condition 中引用的步骤索引未变，但步骤数组长度未变，无需更新）
+	// 2. 在移动过程中索引发生变化的步骤（即原区间内的步骤）
+	// 3. 所有引用了被移动步骤的步骤（需要将旧索引改为新索引）
+
+	// 首先，收集所有索引发生变化的步骤的旧索引->新索引映射
+	const indexMap = new Map<number, number>();
+	if (forward) {
+		// 向后移动：原 src 变为 dst，原 src+1..dst 变为 src..dst-1
+		for (let i = src; i <= dst; i++) {
+			if (i === src) indexMap.set(i, dst);
+			else indexMap.set(i, i - 1);
+		}
+	} else {
+		// 向前移动：原 src 变为 dst，原 dst..src-1 变为 dst+1..src
+		for (let i = dst; i <= src; i++) {
+			if (i === src) indexMap.set(i, dst);
+			else indexMap.set(i, i + 1);
+		}
+	}
+
+	// 更新所有步骤（包括被移动的步骤）的 chosen_condition
+	for (let i = 0; i < steps.length; i++) {
+		const step = steps[i];
+		// 更新 step 中引用的步骤索引
+		for (let j = 0; j < step.chosen_condition.length; j++) {
+			const ref = step.chosen_condition[j];
+			if (ref >= 0) continue; // hypothesis 引用不变
+			const originalStepIndex = ref + stepsLenBefore;
+			if (indexMap.has(originalStepIndex)) {
+				const newStepIndex = indexMap.get(originalStepIndex)!;
+				step.chosen_condition[j] = newStepIndex - steps.length;
+			}
+		}
+	}
+}
+
+function popHyp() {
+	let id = hypothesis.length - 1;
+	for (const step of steps) {
+		if (step.chosen_condition.includes(id)) throw new LogicError('Unable to remove');
+	}
+	hypothesis.pop();
+}
+
 async function saveTheorems(filename: string = 'proofs.json') {
 	const data = userTheorems;
 	const keys = Object.keys(data);
@@ -109,12 +235,11 @@ async function replQuestion() {
 					if (hyp == '.exit') {
 						break;
 					}
-					// if (hyp == '.pop') {
-
-					// 	popHyp();
-					// 	console.log('Hypothesis removed');
-					// 	continue;
-					// }
+					if (hyp == '.pop') {
+						popHyp();
+						console.log('Hypothesis removed');
+						continue;
+					}
 					hypothesis.push(parseAndConvertToAst(hyp));
 				}
 				continue;
@@ -146,43 +271,36 @@ async function replQuestion() {
 				console.log(`Added theorem "${name}" -> ${steps[stepId].proposition}`);
 				continue;
 			}
-			// if (command.startsWith('mv')) {
-			// 	const parts = command.split(' ');
-			// 	if (parts.length < 3) {
-			// 		console.error('Move: move <src> <destination>');
-			// 		continue;
-			// 	}
-			// 	const src = Number(parts[1]);
-			// 	const destination = Number(parts[2]);
+			if (command.startsWith('mv')) {
+				const parts = command.split(' ');
+				if (parts.length < 3) {
+					console.error('Usage: mv <src> <destination>');
+					continue;
+				}
+				const src = Number(parts[1]);
+				const dst = Number(parts[2]);
 
-			// 	if (!steps[src] || !steps[destination]) {
-			// 		console.error('Invalid theorem ID');
-			// 		continue;
-			// 	}
-
-			// 	if (src == destination) {
-			// 		console.log('Nothing happens');
-			// 		continue;
-			// 	}
-			// 	if (!moveStepFromtoPrecheck(src, destination)) {
-			// 		console.error('Unable to move because precheck failed');
-			// 		continue;
-			// 	}
-			// 	if (src < destination) {
-			// 		for (let i = src; i < destination; i++) {
-			// 			moveStepFromto(i, true);
-			// 		}
-			// 		console.log('Moved successfully');
-			// 		continue;
-			// 	}
-			// 	if (src > destination) {
-			// 		for (let i = src; i > destination; i--) {
-			// 			moveStepFromto(i, false);
-			// 		}
-			// 		console.log('Moved successfully');
-			// 		continue;
-			// 	}
-			// }
+				if (isNaN(src) || isNaN(dst)) {
+					console.error('Invalid number');
+					continue;
+				}
+				if (!steps[src] || !steps[dst]) {
+					console.error('Invalid theorem ID');
+					continue;
+				}
+				if (src === dst) {
+					console.log('Nothing happens');
+					continue;
+				}
+				if (!moveStepFromtoPrecheck(src, dst)) {
+					console.error('Unable to move because precheck failed');
+					continue;
+				}
+				const forward = src < dst;
+				moveStepFromto(src, dst, forward);
+				console.log('Moved successfully');
+				continue;
+			}
 
 			const rule = findRules(command);
 			const conditions = [];
