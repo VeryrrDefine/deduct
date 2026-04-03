@@ -1,5 +1,5 @@
 import type { Proposition } from '../parser/ast';
-import { parseAndConvertToAst } from '../parser/compiler';
+import { toProposition } from '../parser/compiler';
 import { LogicError } from './errors';
 import { FormalSystemRule, type TheoremJSON } from './fsRule';
 import type { Step, StepJSON } from './step';
@@ -22,8 +22,8 @@ export class TheoremJSONHandler {
 		return result;
 	}
 	static JSONTOTheorem(theorem: TheoremJSON) {
-		let condition = theorem.condition.map((x) => parseAndConvertToAst(x)) as Proposition[];
-		let result = parseAndConvertToAst(theorem.result) as Proposition;
+		let condition = theorem.condition.map((x) => toProposition(x)) as Proposition[];
+		let result = toProposition(theorem.result) as Proposition;
 		let steps: Step[] = [];
 		for (let i = 0; i < theorem.steps.length; i++) {
 			let curstep = theorem.steps[i];
@@ -32,7 +32,7 @@ export class TheoremJSONHandler {
 					throw new LogicError("Hypothesis required proposition, but there aren't");
 				}
 				steps.push({
-					proposition: parseAndConvertToAst(curstep.proposition),
+					proposition: toProposition(curstep.proposition),
 					rule_id: 'hyp',
 					chosen_condition: [],
 					match_map: {},
@@ -48,10 +48,10 @@ export class TheoremJSONHandler {
 			// const replacements: MatchTable = {};
 			// for (let i = 0; i < ruleResult.replaceable.length; i++) {
 			// 	const repl = curstep.match_map[ruleResult.replaceable[i]];
-			// 	replacements[ruleResult.replaceable[i]] = parseAndConvertToAst(repl);
+			// 	replacements[ruleResult.replaceable[i]] = toProposition(repl);
 			// }
 			// const result = ruleResult.applyResult(replacements);
-			const result = parseAndConvertToAst(curstep.proposition) as Proposition;
+			const result = toProposition(curstep.proposition) as Proposition;
 			console.log(`Result: ${result}`);
 			steps.push({
 				proposition: result,

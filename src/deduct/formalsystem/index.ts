@@ -7,7 +7,6 @@ import {
 	Proposition,
 	type Proposition as Prop,
 } from '../parser/ast';
-import { parseAndConvertToAst } from '../parser/compiler';
 import { LogicError, MatchError } from './errors';
 import { FormalSystemRule } from './fsRule';
 import type { MatchStrTable, MatchTable } from './matchTable';

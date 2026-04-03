@@ -2,7 +2,7 @@ import { FormalSystem } from './index';
 import { Proposition } from '../parser/ast';
 import { LogicError } from './errors';
 import type { MatchTable } from './matchTable';
-import { parseAndConvertToAst } from '../parser/compiler';
+import { toRule } from '../parser/compiler';
 import type { Step, StepJSON } from './step';
 
 export type TheoremJSON = {
@@ -70,7 +70,7 @@ export class FormalSystemRule {
 		return result;
 	}
 	static fromString(x: string, id: string): FormalSystemRule {
-		let p = parseAndConvertToAst(x, true);
+		let p = toRule(x);
 		p.name = id;
 		return p;
 	}

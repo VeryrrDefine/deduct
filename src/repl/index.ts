@@ -1,5 +1,5 @@
 import readline from 'node:readline';
-import { parseAndConvertToAst } from '../deduct/parser/compiler';
+import { toProposition } from '../deduct/parser/compiler';
 import { FormalSystemRule, type RuleResult, type TheoremJSON } from '../deduct/formalsystem/fsRule';
 import type { MatchStrTable, MatchTable } from '../deduct/formalsystem/matchTable';
 import type { Step } from '../deduct/formalsystem/step';
@@ -96,7 +96,7 @@ async function replQuestion() {
 						console.log('Hypothesis removed');
 						continue;
 					}
-					formalSystem.hypothesis.push(parseAndConvertToAst(hyp));
+					formalSystem.hypothesis.push(toProposition(hyp));
 				}
 				continue;
 			}
@@ -190,7 +190,7 @@ async function replQuestion() {
 			const match_map: MatchStrTable = {};
 			for (let i = 0; i < ruleResult.replaceable.length; i++) {
 				const repl = await ask(`Apply $${ruleResult.replaceable[i]}: `);
-				replacements[ruleResult.replaceable[i]] = parseAndConvertToAst(repl);
+				replacements[ruleResult.replaceable[i]] = toProposition(repl);
 				match_map[ruleResult.replaceable[i]] = repl;
 			}
 			const result = ruleResult.applyResultAndDeduct(replacements, formalSystem);

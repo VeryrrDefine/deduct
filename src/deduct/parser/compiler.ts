@@ -7,6 +7,7 @@ import {
 	ImplicationPropositionAST,
 	LetterPropositionAST,
 	NotPropositionAST,
+	Proposition,
 } from './ast';
 import PropositionLexer from './lexer';
 import { PropositionParser } from './parser';
@@ -118,4 +119,11 @@ export function parseAndConvertToAst(code: string, isRule = false) {
 
 	const visitor = new CstToAstVisitor();
 	return visitor.visit(cst);
+}
+
+export function toProposition(code: string): Proposition {
+	return parseAndConvertToAst(code);
+}
+export function toRule(code: string): FormalSystemRule {
+	return parseAndConvertToAst(code, true);
 }
