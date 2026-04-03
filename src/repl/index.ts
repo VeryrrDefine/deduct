@@ -7,74 +7,17 @@ import type { Step } from '../deduct/formalsystem/step';
 import { TheoremJSONHandler } from '../deduct/formalsystem/theorem-json-handler';
 import fs from 'node:fs/promises';
 import { LogicError } from '../deduct/formalsystem/errors';
+import type { Proposition } from '../deduct/parser/ast';
 const rl = readline.createInterface({
 	input: process.stdin,
 	output: process.stdout,
 });
 
+/** 假设列表 */
+let hypothesis: Proposition[] = [];
 /** 证明步骤 */
 let steps: Step[] = [];
 
-/**
- * 将一个步骤移动到后一步的步骤
- * @param direction 方向，true为+1,false为-1
- */
-function moveStepFromto(src: number, direction = true) {
-	if (steps.length - 1 == src && direction) return;
-	if (src == 0 && !direction) return;
-	if (direction) {
-		// 如果前方的命题需要这个src命题，那么报错
-		if (steps[src + 1].chosen_condition.includes(src)) {
-			throw new LogicError('Unable to move: next proposition required');
-		}
-		// 把所有依赖src+1的命题修改成src，把所有依赖src的命题修改成src+1
-		for (let i = src + 2; i < steps.length - 1; i++) {
-			const curstep = steps[i];
-			curstep.chosen_condition = curstep.chosen_condition.map((x) =>
-				x == src + 1 ? src : x == src ? src + 1 : x,
-			);
-		}
-		let temp = steps[src];
-		let temp2 = steps[src + 1];
-		steps[src] = temp2;
-		steps[src + 1] = temp;
-	} else {
-		// 把所有依赖src-1的命题修改成src，把所有依赖src的命题修改成src-1
-		for (let i = src + 1; i < steps.length - 1; i++) {
-			const curstep = steps[i];
-			curstep.chosen_condition = curstep.chosen_condition.map((x) =>
-				x == src - 1 ? src : x == src ? src - 1 : x,
-			);
-		}
-		let temp = steps[src];
-		let temp2 = steps[src - 1];
-		steps[src] = temp2;
-		steps[src - 1] = temp;
-	}
-}
-
-function moveStepFromtoPrecheck(src: number, destination: number) {
-	if (src >= destination) return true;
-	for (let j = src; j < destination; j++) {
-		for (let i = j + 1; i <= destination; i++) {
-			if (steps[i].chosen_condition.includes(j)) {
-				return false;
-			}
-		}
-	}
-	return true;
-}
-function removeStep(step: number) {
-	for (let i = step; i < steps.length; i++) {
-		if (steps[i].chosen_condition.includes(i)) {
-			throw new LogicError('Unable to remove rule because ' + i + ' required it');
-		}
-	}
-	for (let i = step; i < steps.length; i++) {
-		moveStepFromto(i, true);
-	}
-	steps.pop();
-}
 async function saveTheorems(filename: string = 'proofs.json') {
 	const data = userTheorems;
 	const keys = Object.keys(data);
@@ -141,6 +84,10 @@ async function replQuestion() {
 				continue;
 			}
 			if (command === 'list') {
+				for (let i = 0; i < hypothesis.length; i++) {
+					const step = hypothesis[i];
+					console.log(`h${i}\t\t\t${step.toString()}`);
+				}
 				for (let i = 0; i < steps.length; i++) {
 					const step = steps[i];
 					console.log(`p${i}\t\t${step.rule_id}\t${step.proposition}`);
@@ -162,28 +109,13 @@ async function replQuestion() {
 					if (hyp == '.exit') {
 						break;
 					}
-					if (hyp == '.pop') {
-						let lastHyp = NaN;
-						for (let i = steps.length - 1; i >= 0; i--) {
-							if (steps[i].rule_id == 'hyp') {
-								lastHyp = i;
-								break;
-							}
-						}
-						if (isNaN(lastHyp)) {
-							console.error('Something went wrong');
-							continue;
-						}
-						removeStep(lastHyp);
-						console.log('Hypothesis removed');
-						continue;
-					}
-					steps.push({
-						proposition: parseAndConvertToAst(hyp),
-						rule_id: 'hyp',
-						chosen_condition: [],
-						match_map: {},
-					});
+					// if (hyp == '.pop') {
+
+					// 	popHyp();
+					// 	console.log('Hypothesis removed');
+					// 	continue;
+					// }
+					hypothesis.push(parseAndConvertToAst(hyp));
 				}
 				continue;
 			}
@@ -206,7 +138,6 @@ async function replQuestion() {
 					console.error("User Theorem must starts with 's' or '.'");
 					continue;
 				}
-				let hypothesis = steps.filter((x) => x.rule_id == 'hyp').map((x) => x.proposition);
 				userTheorems[name] = FormalSystemRule.asTheorem(
 					hypothesis,
 					steps[stepId].proposition,
@@ -215,55 +146,75 @@ async function replQuestion() {
 				console.log(`Added theorem "${name}" -> ${steps[stepId].proposition}`);
 				continue;
 			}
-			if (command.startsWith('mv')) {
-				const parts = command.split(' ');
-				if (parts.length < 3) {
-					console.error('Move: move <src> <destination>');
-					continue;
-				}
-				const src = Number(parts[1]);
-				const destination = Number(parts[2]);
+			// if (command.startsWith('mv')) {
+			// 	const parts = command.split(' ');
+			// 	if (parts.length < 3) {
+			// 		console.error('Move: move <src> <destination>');
+			// 		continue;
+			// 	}
+			// 	const src = Number(parts[1]);
+			// 	const destination = Number(parts[2]);
 
-				if (!steps[src] || !steps[destination]) {
-					console.error('Invalid theorem ID');
-					continue;
-				}
+			// 	if (!steps[src] || !steps[destination]) {
+			// 		console.error('Invalid theorem ID');
+			// 		continue;
+			// 	}
 
-				if (src == destination) {
-					console.log('Nothing happens');
-					continue;
-				}
-				if (!moveStepFromtoPrecheck(src, destination)) {
-					console.error('Unable to move because precheck failed');
-					continue;
-				}
-				if (src < destination) {
-					for (let i = src; i < destination; i++) {
-						moveStepFromto(i, true);
-					}
-					console.log('Moved successfully');
-					continue;
-				}
-				if (src > destination) {
-					for (let i = src; i > destination; i--) {
-						moveStepFromto(i, false);
-					}
-					console.log('Moved successfully');
-					continue;
-				}
-			}
+			// 	if (src == destination) {
+			// 		console.log('Nothing happens');
+			// 		continue;
+			// 	}
+			// 	if (!moveStepFromtoPrecheck(src, destination)) {
+			// 		console.error('Unable to move because precheck failed');
+			// 		continue;
+			// 	}
+			// 	if (src < destination) {
+			// 		for (let i = src; i < destination; i++) {
+			// 			moveStepFromto(i, true);
+			// 		}
+			// 		console.log('Moved successfully');
+			// 		continue;
+			// 	}
+			// 	if (src > destination) {
+			// 		for (let i = src; i > destination; i--) {
+			// 			moveStepFromto(i, false);
+			// 		}
+			// 		console.log('Moved successfully');
+			// 		continue;
+			// 	}
+			// }
 
 			const rule = findRules(command);
 			const conditions = [];
 			const chosen_condition = [];
+			let uncomplete = false;
 			for (let i = 0; i < rule.conditionNumber; i++) {
-				const cond = Number(await ask(`Enter Theorem ID for ${rule.condition[i]}: `));
-				if (!steps[cond]) {
-					console.error('Invalid theorem ID');
-					continue;
+				let id = await ask(`Enter Theorem ID for ${rule.condition[i]}: `);
+				if (id.startsWith('h')) {
+					const cond = Number(id.slice(1));
+					if (!hypothesis[cond]) {
+						console.error('Invalid Hypothesis ID');
+						i--;
+						uncomplete = true;
+						break;
+					}
+
+					conditions.push(hypothesis[cond]);
+					chosen_condition.push(cond);
+				} else {
+					const cond = Number(id);
+					if (!steps[cond]) {
+						console.error('Invalid theorem ID');
+						i--;
+						uncomplete = true;
+						break;
+					}
+					conditions.push(steps[cond].proposition);
+					chosen_condition.push(cond - steps.length);
 				}
-				conditions.push(steps[cond].proposition);
-				chosen_condition.push(cond);
+			}
+			if (uncomplete) {
+				continue;
 			}
 			const ruleResult = rule.applyRule(...conditions);
 			const replacements: MatchTable = {};
