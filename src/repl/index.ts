@@ -27,7 +27,7 @@ function popHyp() {
 
 async function saveTheorems(filename: string = 'proofs.json') {
 	// const data = userTheorems;
-	const keys = Object.keys(formalSystem.getUserTheorems());
+	const keys = formalSystem.getUserTheorems();
 	let result: Record<string, TheoremJSON> = {};
 	for (const key of keys) {
 		result[key] = TheoremJSONHandler.theoremToJSON(formalSystem.findRules(key));
