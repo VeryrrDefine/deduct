@@ -17,14 +17,6 @@ const formalSystem = new FormalSystem();
 
 // ==================== 移动步骤的辅助函数 ====================
 
-function popHyp() {
-	let id = formalSystem.hypothesis.length - 1;
-	for (const step of formalSystem.steps) {
-		if (step.chosen_condition.includes(id)) throw new LogicError('Unable to remove');
-	}
-	formalSystem.hypothesis.pop();
-}
-
 async function saveTheorems(filename: string = 'proofs.json') {
 	// const data = userTheorems;
 	const keys = formalSystem.getUserTheorems();
@@ -94,7 +86,7 @@ async function replQuestion() {
 						break;
 					}
 					if (hyp == '.pop') {
-						popHyp();
+						formalSystem.popHyp();
 						console.log('Hypothesis removed');
 						continue;
 					}

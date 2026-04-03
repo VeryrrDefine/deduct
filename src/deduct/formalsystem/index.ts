@@ -252,6 +252,14 @@ export class FormalSystem {
 		}
 	}
 
+	popHyp() {
+		let id = this.hypothesis.length - 1;
+		for (const step of this.steps) {
+			if (step.chosen_condition.includes(id)) throw new LogicError('Unable to remove');
+		}
+		this.hypothesis.pop();
+	}
+
 	/**
 	 * 得到新id
 	 */
