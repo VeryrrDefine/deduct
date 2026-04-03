@@ -1,6 +1,5 @@
 import readline from 'node:readline';
 import { parseAndConvertToAst } from '../deduct/parser/compiler';
-import { userTheorems } from '../deduct/formalsystem/rules';
 import { FormalSystemRule, type RuleResult, type TheoremJSON } from '../deduct/formalsystem/fsRule';
 import type { MatchStrTable, MatchTable } from '../deduct/formalsystem/matchTable';
 import type { Step } from '../deduct/formalsystem/step';
@@ -28,32 +27,23 @@ function popHyp() {
 
 async function saveTheorems(filename: string = 'proofs.json') {
 	// const data = userTheorems;
-	// const keys = Object.keys(data);
-	// let result: Record<string, TheoremJSON> = {};
-	// for (const key of keys) {
-	// 	result[key] = TheoremJSONHandler.theoremToJSON(data[key]);
-	// }
-	// await fs.writeFile(filename, JSON.stringify(result, null, 2), 'utf-8');
-	// console.log('Saved successfully');
-	// return result;
+	const keys = Object.keys(formalSystem.getUserTheorems());
+	let result: Record<string, TheoremJSON> = {};
+	for (const key of keys) {
+		result[key] = TheoremJSONHandler.theoremToJSON(formalSystem.findRules(key));
+	}
+	await fs.writeFile(filename, JSON.stringify(result, null, 2), 'utf-8');
+	console.log('Saved successfully');
+	return result;
 }
 
 async function loadTheorems(filename: string = 'proofs.json') {
-	// const data = await fs.readFile(filename, 'utf-8');
-	// const proofs = JSON.parse(data);
-	// let replace: {
-	// 	[key: string]: FormalSystemRule;
-	// } = {};
-	// for (const key in proofs) {
-	// 	replace[key] = TheoremJSONHandler.JSONTOTheorem(proofs[key]);
-	// }
-	// for (const key in userTheorems) {
-	// 	delete userTheorems[key];
-	// }
-	// for (const key in replace) {
-	// 	userTheorems[key] = replace[key];
-	// }
-	// console.log('Loaded successfully');
+	const data = await fs.readFile(filename, 'utf-8');
+	const proofs = JSON.parse(data);
+	for (const key in proofs) {
+		TheoremJSONHandler.JSONTOTheorem(proofs[key]).addInto(formalSystem, key);
+	}
+	console.log('Loaded successfully');
 }
 
 async function replQuestion() {
@@ -129,12 +119,12 @@ async function replQuestion() {
 					console.error("User Theorem must starts with 's' or '.'");
 					continue;
 				}
-				userTheorems[name] = FormalSystemRule.asTheorem(
+				FormalSystemRule.asTheorem(
 					formalSystem.hypothesis,
 					formalSystem.steps[stepId].proposition,
 					formalSystem.steps,
-				);
-				console.log(`Added theorem "${name}" -> ${formalSystem.steps[stepId].proposition}`);
+				).addInto(formalSystem, name);
+				console.log(`Added theorem "${name}".`);
 				continue;
 			}
 			if (command.startsWith('mv')) {
@@ -168,7 +158,7 @@ async function replQuestion() {
 			const chosen_condition = [];
 			let uncomplete = false;
 			for (let i = 0; i < rule.conditionNumber; i++) {
-				let id = await ask(`Enter Theorem ID for ${rule.condition[i]}: `);
+				let id = await ask(`Enter Theorem ID for $${rule.condition[i]}: `);
 				if (id.startsWith('h')) {
 					const cond = Number(id.slice(1));
 					if (!formalSystem.hypothesis[cond]) {
@@ -199,7 +189,7 @@ async function replQuestion() {
 			const replacements: MatchTable = {};
 			const match_map: MatchStrTable = {};
 			for (let i = 0; i < ruleResult.replaceable.length; i++) {
-				const repl = await ask(`Apply ${ruleResult.replaceable[i]}: `);
+				const repl = await ask(`Apply $${ruleResult.replaceable[i]}: `);
 				replacements[ruleResult.replaceable[i]] = parseAndConvertToAst(repl);
 				match_map[ruleResult.replaceable[i]] = repl;
 			}

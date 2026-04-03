@@ -16,6 +16,7 @@ export class FormalSystemRule {
 	conditionNumber: number;
 	steps: Step[];
 	isTheorem = false;
+	name = '';
 	constructor(condition: Proposition[], result: Proposition) {
 		this.condition = condition;
 		this.result = result;
@@ -28,7 +29,9 @@ export class FormalSystemRule {
 		rule.isTheorem = true;
 		return rule;
 	}
-
+	addInto(fs: FormalSystem, id: string) {
+		fs.addRule(this, id);
+	}
 	applyRule(...propositions: Proposition[]) {
 		if (propositions.length !== this.conditionNumber)
 			throw new LogicError("Proposition numbers doesn't match");

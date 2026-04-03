@@ -41,6 +41,16 @@ export class FormalSystem {
 		throw new ReferenceError('Cannot find rule ' + x);
 	}
 
+	addRule(fs: FormalSystemRule, id: string) {
+		this.rules[id] = fs;
+	}
+
+	getUserTheorems(): string[] {
+		let keys = Object.keys(this.rules);
+
+		return keys.filter((x) => x.startsWith('s') || x.startsWith('.'));
+	}
+
 	/**
 	 * Match current AST to goal AST
 	 *
