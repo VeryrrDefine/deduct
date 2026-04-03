@@ -21,7 +21,7 @@ export class TheoremJSONHandler {
 		};
 		return result;
 	}
-	static JSONTOTheorem(theorem: TheoremJSON) {
+	static JSONTOTheorem(theorem: TheoremJSON, name: string) {
 		let condition = theorem.condition.map((x) => toProposition(x)) as Proposition[];
 		let result = toProposition(theorem.result) as Proposition;
 		let steps: Step[] = [];
@@ -52,7 +52,6 @@ export class TheoremJSONHandler {
 			// }
 			// const result = ruleResult.applyResult(replacements);
 			const result = toProposition(curstep.proposition) as Proposition;
-			console.log(`Result: ${result}`);
 			steps.push({
 				proposition: result,
 				rule_id: curstep.rule_id,
@@ -60,6 +59,6 @@ export class TheoremJSONHandler {
 				match_map: curstep.match_map,
 			});
 		}
-		return FormalSystemRule.asTheorem(condition, result, steps);
+		return FormalSystemRule.asTheorem(condition, result, steps, name);
 	}
 }

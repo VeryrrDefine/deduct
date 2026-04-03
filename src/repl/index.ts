@@ -41,7 +41,7 @@ async function loadTheorems(filename: string = 'proofs.json') {
 	const data = await fs.readFile(filename, 'utf-8');
 	const proofs = JSON.parse(data);
 	for (const key in proofs) {
-		TheoremJSONHandler.JSONTOTheorem(proofs[key]).addInto(formalSystem, key);
+		TheoremJSONHandler.JSONTOTheorem(proofs[key], key).addInto(formalSystem, key);
 	}
 	console.log('Loaded successfully');
 }
@@ -123,6 +123,7 @@ async function replQuestion() {
 					formalSystem.hypothesis,
 					formalSystem.steps[stepId].proposition,
 					formalSystem.steps,
+					name,
 				).addInto(formalSystem, name);
 				console.log(`Added theorem "${name}".`);
 				continue;
@@ -158,7 +159,7 @@ async function replQuestion() {
 			const chosen_condition = [];
 			let uncomplete = false;
 			for (let i = 0; i < rule.conditionNumber; i++) {
-				let id = await ask(`Enter Theorem ID for $${rule.condition[i]}: `);
+				let id = await ask(`Enter Theorem ID for ${rule.condition[i].displayFancy()}: `);
 				if (id.startsWith('h')) {
 					const cond = Number(id.slice(1));
 					if (!formalSystem.hypothesis[cond]) {
@@ -194,7 +195,7 @@ async function replQuestion() {
 				match_map[ruleResult.replaceable[i]] = repl;
 			}
 			const result = ruleResult.applyResultAndDeduct(replacements, formalSystem);
-			console.log(`Result: ${result}`);
+			console.log(`Result: ${result.displayFancy()}`);
 		} catch (e) {
 			console.error(e);
 		}

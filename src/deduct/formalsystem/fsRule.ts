@@ -23,10 +23,11 @@ export class FormalSystemRule {
 		this.conditionNumber = condition.length;
 		this.steps = [];
 	}
-	static asTheorem(condition: Proposition[], result: Proposition, steps: Step[]) {
+	static asTheorem(condition: Proposition[], result: Proposition, steps: Step[], name: string) {
 		const rule = new FormalSystemRule(condition, result);
 		rule.steps = steps;
 		rule.isTheorem = true;
+		rule.name = name;
 		return rule;
 	}
 	addInto(fs: FormalSystem, id: string) {
