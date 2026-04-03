@@ -2,11 +2,13 @@ import {
 	AnyPropositionAST as AnyProp,
 	IffPropositionAST as Iff,
 	ImplicationPropositionAST as Impl,
+	ImplicationPropositionAST,
 	LetterPropositionAST as LetterProp,
 	NotPropositionAST as Not,
 	Proposition,
 	type Proposition as Prop,
 } from '../parser/ast';
+import { RuleParser } from '../parser/parserule-structure';
 import { LogicError, MatchError } from './errors';
 import { FormalSystemRule } from './fsRule';
 import type { MatchStrTable, MatchTable } from './matchTable';
@@ -33,13 +35,23 @@ export class FormalSystem {
 	hypothesis: Proposition[] = [];
 	steps: Step[] = [];
 	findRules(x: string) {
-		if (x in this.rules) {
+		if (this.ruleExists(x)) {
 			let y = x as keyof typeof this.rules;
 			return this.rules[y];
-		}
-		throw new ReferenceError('Cannot find rule ' + x);
-	}
+		} else {
+			let parser = new RuleParser(x);
+			if (parser.metaRules == '') {
+				throw new ReferenceError('Cannot find rule ' + x);
+			}
+			let tryGenRule = this.genRule(parser);
+			if (!tryGenRule) throw new LogicError(`Unable to generate rule ${parser.ruleString}`);
 
+			return tryGenRule;
+		}
+	}
+	ruleExists(x: string): boolean {
+		return x in this.rules;
+	}
 	addRule(fs: FormalSystemRule, id: string) {
 		this.rules[id] = fs;
 	}
@@ -267,6 +279,91 @@ export class FormalSystem {
 		const moved = this.steps.splice(src, 1)[0];
 		if (dst === this.steps.length) this.steps.push(moved);
 		else this.steps.splice(dst, 0, moved);
+	}
+	/**
+	 * Try to autogenerate rule from a rule parser.
+	 *
+	 * The procedure is:
+	 *
+	 * Found the base rule, try to found, if there aren't, then return null.
+	 *
+	 * If found, then try to handle metarules.
+	 */
+	genRule(x: RuleParser): FormalSystemRule | null;
+	/**
+	 * Try to autogenerate rule from a string.
+	 */
+	genRule(x: string): FormalSystemRule | null;
+	genRule(x: RuleParser | string): FormalSystemRule | null {
+		if (typeof x == 'string') {
+			return this.genRule(new RuleParser(x));
+		}
+		let baseRule = x.originalRule;
+		if (this.ruleExists(baseRule)) {
+			let rule = this.findRules(baseRule);
+			if (x.metaRules == '') return rule;
+			else if (this.ruleExists(x.ruleString)) {
+				return this.findRules(x.ruleString);
+			} else {
+				if (x.metaRules.startsWith('<')) {
+					return this.metaInvDeductTheorem(x.ruleString.slice(1));
+					// return this.findRules(x.ruleString);
+				}
+				return null;
+			}
+		}
+		return null;
+	}
+	metaInvDeductTheorem(idx: string): FormalSystemRule | null {
+		if (idx[0] === '>') {
+			return this.genRule(idx.slice(1));
+		}
+		// a => <a
+		if (this.ruleExists('<' + idx)) return this.findRules('<' + idx);
+		const rule = this.genRule(idx);
+		if (!rule) throw new Error('Rule not exists');
+		const oldP = this.steps;
+		const oldH = this.hypothesis;
+
+		const conclusion = rule.result;
+		if (!(conclusion instanceof ImplicationPropositionAST))
+			throw new Error(`Cannot generate <${idx} because conclusion isn't an implication`);
+
+		const [ss1, ss2] = [conclusion.left, conclusion.right];
+		try {
+			this.removePropositions(1 / 0);
+			this.hypothesis = [];
+			rule.condition.forEach((c) => this.hypothesis.push(c));
+			this.hypothesis.push(ss1);
+			const nhyp = this.hypothesis.length - 1;
+
+			let chosen_condition = [];
+			for (let i = 0; i < rule.condition.length; i++) {
+				chosen_condition.push(i);
+			}
+			const ss1_ss2_1 = rule
+				.applyRule(chosen_condition, ...rule.condition)
+				.applyResultAndDeduct(undefined, this);
+
+			this.rules.mp
+				.applyRule([-1, nhyp], ss1_ss2_1, ss1)
+				.applyResultAndDeduct(undefined, this);
+
+			let ther = FormalSystemRule.asTheorem(
+				this.hypothesis,
+				this.steps[this.steps.length - 1].proposition,
+				this.steps,
+				'<' + idx,
+			).addInto(this, '<' + idx);
+
+			this.steps = oldP;
+			this.hypothesis = oldH;
+			return ther;
+		} catch (e) {
+			this.steps = oldP;
+			this.hypothesis = oldH;
+			throw e;
+		}
 	}
 }
 

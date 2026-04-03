@@ -1,5 +1,5 @@
 import { FormalSystem } from './index';
-import { Proposition } from '../parser/ast';
+import { AnyPropositionAST, Proposition } from '../parser/ast';
 import { LogicError } from './errors';
 import type { MatchTable } from './matchTable';
 import { toRule } from '../parser/compiler';
@@ -32,6 +32,7 @@ export class FormalSystemRule {
 	}
 	addInto(fs: FormalSystem, id: string) {
 		fs.addRule(this, id);
+		return this;
 	}
 	applyRule(chosen_condition: number[], ...propositions: Proposition[]) {
 		if (propositions.length !== this.conditionNumber)
@@ -87,7 +88,14 @@ export class RuleResult {
 		this.rule_id = rule_id;
 		this.chosen_condition = chosen_condition;
 	}
-	applyResult(tables: MatchTable) {
+	applyResult(tables?: MatchTable) {
+		if (tables === undefined) {
+			let result = this.result.clone();
+			for (const repl of this.replaceable) {
+				result = result.replaceAnyProposition(repl, new AnyPropositionAST(repl), true);
+			}
+			return result;
+		}
 		const keys = Object.keys(tables);
 		let result = this.result.clone();
 		for (const key of keys) {
@@ -96,13 +104,13 @@ export class RuleResult {
 		}
 		return result;
 	}
-	applyResultAndDeduct(tables: MatchTable, fs: FormalSystem) {
+	applyResultAndDeduct(tables: MatchTable | undefined, fs: FormalSystem) {
 		let proposition = this.applyResult(tables);
 		fs.addProposition(
 			proposition,
 			this.rule_id,
 			this.chosen_condition,
-			Object.fromEntries(Object.entries(tables).map((x) => [x[0], x[1].toString()])),
+			Object.fromEntries(this.replaceable.map((x) => [x, '$' + x])),
 		);
 		return proposition;
 	}

@@ -7,7 +7,7 @@ export class RuleParser {
 		this.metaRules = '';
 		this.originalRule = '';
 		for (let i = 0; i < ruleString.length; i++) {
-			if (ruleString[i].match(/c/)) {
+			if (ruleString[i].match(/[c><]/)) {
 				this.metaRules += ruleString[i];
 			} else {
 				this.originalRule = this.ruleString.slice(i);
