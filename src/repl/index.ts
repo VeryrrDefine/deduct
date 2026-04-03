@@ -53,7 +53,7 @@ async function replQuestion() {
 			const command = answer.trim();
 			if (command === 'help') {
 				console.log(
-					`\nDEDUCT v0.0.0 HELP\n\n\nexit\t\t\tExit this program\npop\t\t\tremove the last theorem\nclear\t\t\tclear all theorems\nlist\t\t\tList Proof steps\nrules\t\t\tList theorems & axioms\ntheorem\t\t\tCreate Theorem from current step\n[RULENAME]\t\tApply theorems/axioms\nhyp\t\t\tAdd hypothesis\nmv\t\t\tMove a proposition from ... to ...\nsave\t\t\tSave your theorems to proofs.json\nload\t\t\tLoad your theorems from proofs.json`,
+					`\nDEDUCT v0.0.0 HELP\n\n\nexit\t\t\tExit this program\npop\t\t\tremove the last theorem\nclear\t\t\tclear all theorems\nlist [ruleId]\t\tList Proof steps\nrules\t\t\tList theorems & axioms\ntheorem\t\t\tCreate Theorem from current step\n[RULENAME]\t\tApply theorems/axioms\nhyp\t\t\tAdd hypothesis\nmv\t\t\tMove a proposition from ... to ...\nsave\t\t\tSave your theorems to proofs.json\nload\t\t\tLoad your theorems from proofs.json`,
 				);
 				continue;
 			}
@@ -72,8 +72,10 @@ async function replQuestion() {
 				console.log('Cleared.');
 				continue;
 			}
-			if (command === 'list') {
-				console.table(formalSystem.listStepDetails());
+			if (command.startsWith('list')) {
+				let commands = command.split(' ');
+				if (commands[1]) console.table(formalSystem.listStepDetails(commands[1]));
+				else console.table(formalSystem.listStepDetails());
 				continue;
 			}
 			if (command === 'save') {

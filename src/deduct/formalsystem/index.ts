@@ -156,8 +156,39 @@ export class FormalSystem {
 		return res;
 	}
 
-	listStepDetails() {
+	listStepDetails(ruleId?: string) {
 		let res = [];
+		if (ruleId) {
+			const rule = this.findRules(ruleId);
+			for (let i = 0; i < rule.condition.length; i++) {
+				res.push({
+					theoremId: `h${i}`,
+					proposition: rule.condition[i].displayFancy(),
+					operation: 'hyp',
+				});
+			}
+			if (!rule.isTheorem) {
+				res.push({
+					theoremId: 'p0',
+					proposition: rule.result.displayFancy(),
+					operation: ruleId,
+				});
+				return res;
+			}
+			for (let i = 0; i < rule.steps.length; i++) {
+				const step = rule.steps[i];
+				res.push({
+					theoremId: `p${i}`,
+					proposition: step.proposition.displayFancy(),
+					operation:
+						step.rule_id +
+						(step.chosen_condition.length !== 0
+							? ' ' + step.chosen_condition.join(', ')
+							: ''),
+				});
+			}
+			return res;
+		}
 		for (let i = 0; i < this.hypothesis.length; i++) {
 			res.push({
 				theoremId: `h${i}`,
