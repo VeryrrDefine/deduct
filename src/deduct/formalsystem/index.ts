@@ -151,7 +151,7 @@ export class FormalSystem {
 		let res = [];
 		let index = 0;
 		for (const rule of this.listRules()) {
-			res.push({ RuleId: rule[0], Content: rule[1].toString() });
+			res.push({ RuleId: rule[0], Content: rule[1].displayFancy() });
 			index++;
 		}
 		return res;
@@ -162,7 +162,7 @@ export class FormalSystem {
 		for (let i = 0; i < this.hypothesis.length; i++) {
 			res.push({
 				theoremId: `h${i}`,
-				proposition: this.hypothesis[i].toString(),
+				proposition: this.hypothesis[i].displayFancy(),
 				operation: 'hyp',
 			});
 		}
@@ -170,7 +170,7 @@ export class FormalSystem {
 			const step = this.steps[i];
 			res.push({
 				theoremId: `p${i}`,
-				proposition: step.proposition.toString(),
+				proposition: step.proposition.displayFancy(),
 				operation:
 					step.rule_id +
 					(step.chosen_condition.length !== 0

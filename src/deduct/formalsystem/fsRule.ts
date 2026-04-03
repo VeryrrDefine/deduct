@@ -59,6 +59,16 @@ export class FormalSystemRule {
 
 		return result;
 	}
+	displayFancy() {
+		let result = this.condition.map((x) => x.displayFancy()).join(', ');
+		if (result !== '') {
+			result += ' ';
+		}
+		result += '⊢ ';
+		result += this.result.displayFancy();
+
+		return result;
+	}
 	static fromString(x: string, id: string): FormalSystemRule {
 		let p = parseAndConvertToAst(x, true);
 		p.name = id;

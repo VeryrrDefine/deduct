@@ -11,6 +11,9 @@ export class Proposition {
 	findAnyProposition(): string[] {
 		return [];
 	}
+	displayFancy(level?: number) {
+		return '';
+	}
 }
 export class LetterPropositionAST extends Proposition {
 	name;
@@ -26,6 +29,9 @@ export class LetterPropositionAST extends Proposition {
 	}
 	findAnyProposition(): string[] {
 		return [];
+	}
+	displayFancy(level?: number): string {
+		return this.toString();
 	}
 }
 
@@ -50,6 +56,9 @@ export class AnyPropositionAST extends Proposition {
 	findAnyProposition(): string[] {
 		return [];
 	}
+	displayFancy(level?: number): string {
+		return '$' + this.name;
+	}
 }
 
 export class AnyPropositionPreApplyAST extends Proposition {
@@ -70,6 +79,9 @@ export class AnyPropositionPreApplyAST extends Proposition {
 	}
 	findAnyProposition(): string[] {
 		return [this.name];
+	}
+	displayFancy(level?: number): string {
+		return '$' + this.name + '!';
 	}
 }
 
@@ -96,6 +108,12 @@ export class ImplicationPropositionAST extends Proposition {
 	findAnyProposition(): string[] {
 		return this.left.findAnyProposition().concat(this.right.findAnyProposition());
 	}
+	displayFancy(level?: number): string {
+		if (level == 1) {
+			return `(${this.left.displayFancy(1)} → ${this.right.displayFancy(1)})`;
+		}
+		return `${this.left.displayFancy(1)} → ${this.right.displayFancy(1)}`;
+	}
 }
 
 export class IffPropositionAST extends Proposition {
@@ -121,6 +139,12 @@ export class IffPropositionAST extends Proposition {
 	findAnyProposition(): string[] {
 		return this.left.findAnyProposition().concat(this.right.findAnyProposition());
 	}
+	displayFancy(level?: number): string {
+		if (level == 1) {
+			return `(${this.left.displayFancy(1)} ↔ ${this.right.displayFancy(1)})`;
+		}
+		return `${this.left.displayFancy(1)} ↔ ${this.right.displayFancy(1)}`;
+	}
 }
 
 export class NotPropositionAST extends Proposition {
@@ -140,6 +164,9 @@ export class NotPropositionAST extends Proposition {
 	}
 	findAnyProposition(): string[] {
 		return this.prop.findAnyProposition();
+	}
+	displayFancy(level?: number): string {
+		return `¬${this.prop.displayFancy(1)}`;
 	}
 }
 
@@ -166,6 +193,12 @@ export class DisjunctionPropositionAST extends Proposition {
 	findAnyProposition(): string[] {
 		return this.left.findAnyProposition().concat(this.right.findAnyProposition());
 	}
+	displayFancy(level?: number): string {
+		if (level == 1) {
+			return `(${this.left.displayFancy(1)} ∨ ${this.right.displayFancy(1)})`;
+		}
+		return `${this.left.displayFancy(1)} ∨ ${this.right.displayFancy(1)}`;
+	}
 }
 
 export class ConjunctionPropositionAST extends Proposition {
@@ -190,5 +223,11 @@ export class ConjunctionPropositionAST extends Proposition {
 	}
 	findAnyProposition(): string[] {
 		return this.left.findAnyProposition().concat(this.right.findAnyProposition());
+	}
+	displayFancy(level?: number): string {
+		if (level == 1) {
+			return `(${this.left.displayFancy(1)} ∧ ${this.right.displayFancy(1)})`;
+		}
+		return `${this.left.displayFancy(1)} ∧ ${this.right.displayFancy(1)}`;
 	}
 }
