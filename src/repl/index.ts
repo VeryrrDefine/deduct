@@ -64,6 +64,17 @@ function moveStepFromtoPrecheck(src: number, destination: number) {
 	}
 	return true;
 }
+function removeStep(step: number) {
+	for (let i = step; i < steps.length; i++) {
+		if (steps[i].chosen_condition.includes(i)) {
+			throw new LogicError('Unable to remove rule because ' + i + ' required it');
+		}
+	}
+	for (let i = step; i < steps.length; i++) {
+		moveStepFromto(i, true);
+	}
+	steps.pop();
+}
 async function saveTheorems(filename: string = 'proofs.json') {
 	const data = userTheorems;
 	const keys = Object.keys(data);
@@ -145,13 +156,35 @@ async function replQuestion() {
 				continue;
 			}
 			if (command === 'hyp') {
-				const hyp = await ask('Enter Hypothesis');
-				steps.push({
-					proposition: parseAndConvertToAst(hyp),
-					rule_id: 'hyp',
-					chosen_condition: [],
-					match_map: {},
-				});
+				console.log('Enter Hypothesis, enter .exit to exit, enter .pop to pop');
+				while (true) {
+					const hyp = await ask('H>>> ');
+					if (hyp == '.exit') {
+						break;
+					}
+					if (hyp == '.pop') {
+						let lastHyp = NaN;
+						for (let i = steps.length - 1; i >= 0; i--) {
+							if (steps[i].rule_id == 'hyp') {
+								lastHyp = i;
+								break;
+							}
+						}
+						if (isNaN(lastHyp)) {
+							console.error('Something went wrong');
+							continue;
+						}
+						removeStep(lastHyp);
+						console.log('Hypothesis removed');
+						continue;
+					}
+					steps.push({
+						proposition: parseAndConvertToAst(hyp),
+						rule_id: 'hyp',
+						chosen_condition: [],
+						match_map: {},
+					});
+				}
 				continue;
 			}
 			if (command.startsWith('theorem')) {
