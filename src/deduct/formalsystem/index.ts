@@ -331,9 +331,8 @@ export class FormalSystem {
 			} else {
 				if (x.metaRules.startsWith('<')) {
 					return this.metaInvDeductTheorem(x.ruleString.slice(1));
-					// return this.findRules(x.ruleString);
 				}
-				return null;
+				throw new Error(`Not supported: ${x.metaRules[0]}`);
 			}
 		}
 		return null;
