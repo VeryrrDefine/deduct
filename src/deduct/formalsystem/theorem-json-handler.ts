@@ -2,8 +2,6 @@ import type { Proposition } from '../parser/ast';
 import { parseAndConvertToAst } from '../parser/compiler';
 import { LogicError } from './errors';
 import { FormalSystemRule, type TheoremJSON } from './fsRule';
-import type { MatchTable } from './matchTable';
-import { findRules } from './rules';
 import type { Step, StepJSON } from './step';
 
 export class TheoremJSONHandler {

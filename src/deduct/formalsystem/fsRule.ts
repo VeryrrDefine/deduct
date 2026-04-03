@@ -4,7 +4,6 @@ import { LogicError } from './errors';
 import type { MatchTable } from './matchTable';
 import { parseAndConvertToAst } from '../parser/compiler';
 import type { Step, StepJSON } from './step';
-import { findRules } from './rules';
 
 export type TheoremJSON = {
 	condition: string[];

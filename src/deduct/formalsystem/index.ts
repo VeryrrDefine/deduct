@@ -4,17 +4,43 @@ import {
 	ImplicationPropositionAST as Impl,
 	LetterPropositionAST as LetterProp,
 	NotPropositionAST as Not,
+	Proposition,
 	type Proposition as Prop,
 } from '../parser/ast';
 import { parseAndConvertToAst } from '../parser/compiler';
 import { LogicError, MatchError } from './errors';
+import { FormalSystemRule } from './fsRule';
 import type { MatchTable } from './matchTable';
+import type { Step } from './step';
 
 export class FormalSystem {
 	static debugLog(...args: any[]) {
 		return;
 		return console.debug(...args);
 	}
+	rules: {
+		[key: string]: FormalSystemRule;
+	} = {
+		mp: FormalSystemRule.fromString('$0>$1, $0|-$1'),
+		a1: FormalSystemRule.fromString('|-$0>($1>$0)'),
+		a2: FormalSystemRule.fromString('|-($0>($1>$2))>(($0>$1)>($0>$2))'),
+		a3: FormalSystemRule.fromString('|-(~$0>~$1)>($1>$0)'),
+		'd<>1': FormalSystemRule.fromString('|-($0<>$1)>~(($0>$1)>~($1>$0))'),
+		'd<>2': FormalSystemRule.fromString('|-~(($0>$1)>~($1>$0))>($0<>$1)'),
+		'd|': FormalSystemRule.fromString('⊢($0|$1)<>(~$0>$1)'),
+		'd&': FormalSystemRule.fromString('⊢($0&$1)<>~($0>~$1)'),
+	};
+
+	hypothesis: Proposition[] = [];
+	steps: Step[] = [];
+	findRules(x: string) {
+		if (x in this.rules) {
+			let y = x as keyof typeof this.rules;
+			return this.rules[y];
+		}
+		throw new ReferenceError('Cannot find rule ' + x);
+	}
+
 	/**
 	 * Match current AST to goal AST
 	 *
@@ -91,6 +117,64 @@ export class FormalSystem {
 		if (leftAST === undefined) return true;
 		if (rightAST === undefined) return true;
 		return leftAST?.toString?.() === rightAST?.toString?.();
+	}
+
+	/**
+	 * 移除最后的几个命题
+	 */
+	removePropositions(amount2?: number) {
+		let amount = amount2 ?? 1;
+		if (!isFinite(amount)) {
+			this.steps = [];
+		} else {
+			while (amount--) {
+				this.steps.pop();
+			}
+		}
+	}
+
+	/**
+	 * 得到新id
+	 */
+	private _getNewIndex(src: number, dst: number, i: number): number {
+		if (i === src) {
+			return dst > src ? dst - 1 : dst;
+		}
+		if (src < dst && i > src && i < dst) {
+			return i - 1;
+		}
+		if (src > dst && i >= dst && i < src) {
+			return i + 1;
+		}
+		return i;
+	}
+
+	moveProposition(src: number, dst: number) {
+		if (dst === -1) dst = this.steps.length;
+		if (src === dst || dst === src + 1) return;
+
+		for (let i = Math.min(src, dst); i < this.steps.length; i++) {
+			const from = this.steps[i];
+			if (from.chosen_condition.length == 0) continue;
+			const ni = this._getNewIndex(src, dst, i);
+			for (const j of from.chosen_condition) {
+				const nj = this._getNewIndex(src, dst, j);
+				console.assert(nj !== ni);
+				if (nj > ni) throw new LogicError('Invalid moving');
+			}
+		}
+
+		for (let i = Math.min(src, dst); i < this.steps.length; i++) {
+			const from = this.steps[i];
+			if (from.chosen_condition.length == 0) continue;
+			from.chosen_condition = from.chosen_condition.map((e) =>
+				this._getNewIndex(src, dst, e),
+			);
+		}
+		if (dst > src) dst--;
+		const moved = this.steps.splice(src, 1)[0];
+		if (dst === this.steps.length) this.steps.push(moved);
+		else this.steps.splice(dst, 0, moved);
 	}
 }
 
