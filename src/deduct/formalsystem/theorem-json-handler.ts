@@ -17,6 +17,7 @@ export class TheoremJSONHandler {
 					rule_id: x.rule_id,
 					chosen_condition: x.chosen_condition,
 					match_map: x.match_map,
+					proposition: x.proposition.toString(),
 				}),
 			),
 		};
@@ -40,18 +41,19 @@ export class TheoremJSONHandler {
 				});
 				continue;
 			}
-			let rule = findRules(curstep.rule_id);
-			let conditions2: Proposition[] = [];
-			for (let j = 0; j < curstep.chosen_condition.length; j++) {
-				conditions2.push(steps[curstep.chosen_condition[j]].proposition);
-			}
-			const ruleResult = rule.applyRule(...conditions2);
-			const replacements: MatchTable = {};
-			for (let i = 0; i < ruleResult.replaceable.length; i++) {
-				const repl = curstep.match_map[ruleResult.replaceable[i]];
-				replacements[ruleResult.replaceable[i]] = parseAndConvertToAst(repl);
-			}
-			const result = ruleResult.applyResult(replacements);
+			// let rule = findRules(curstep.rule_id);
+			// let conditions2: Proposition[] = [];
+			// for (let j = 0; j < curstep.chosen_condition.length; j++) {
+			// 	conditions2.push(steps[curstep.chosen_condition[j]].proposition);
+			// }
+			// const ruleResult = rule.applyRule(...conditions2);
+			// const replacements: MatchTable = {};
+			// for (let i = 0; i < ruleResult.replaceable.length; i++) {
+			// 	const repl = curstep.match_map[ruleResult.replaceable[i]];
+			// 	replacements[ruleResult.replaceable[i]] = parseAndConvertToAst(repl);
+			// }
+			// const result = ruleResult.applyResult(replacements);
+			const result = parseAndConvertToAst(curstep.proposition) as Proposition;
 			console.log(`Result: ${result}`);
 			steps.push({
 				proposition: result,

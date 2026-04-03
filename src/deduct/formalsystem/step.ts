@@ -9,7 +9,7 @@ export type Step = {
 };
 export type StepJSON = {
 	// proposition: string;
-	proposition?: string;
+	proposition: string;
 	rule_id: string;
 	chosen_condition: number[];
 	match_map: MatchStrTable;
