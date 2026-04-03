@@ -8,7 +8,7 @@ export class Proposition {
 	clone() {
 		return new Proposition();
 	}
-	findAnyProposition(): string[] {
+	findAnyProposition(isPreApply = false): string[] {
 		return [];
 	}
 	displayFancy(level?: number) {
@@ -27,7 +27,7 @@ export class LetterPropositionAST extends Proposition {
 	clone() {
 		return new LetterPropositionAST(this.name);
 	}
-	findAnyProposition(): string[] {
+	findAnyProposition(isPreApply = false): string[] {
 		return [];
 	}
 	displayFancy(level?: number): string {
@@ -53,7 +53,8 @@ export class AnyPropositionAST extends Proposition {
 	clone() {
 		return new AnyPropositionAST(this.name);
 	}
-	findAnyProposition(): string[] {
+	findAnyProposition(isPreApply = false): string[] {
+		if (isPreApply) return [this.name];
 		return [];
 	}
 	displayFancy(level?: number): string {
@@ -77,8 +78,9 @@ export class AnyPropositionPreApplyAST extends Proposition {
 	clone() {
 		return new AnyPropositionPreApplyAST(this.name);
 	}
-	findAnyProposition(): string[] {
-		return [this.name];
+	findAnyProposition(isPreApply = false): string[] {
+		if (!isPreApply) return [this.name];
+		return [];
 	}
 	displayFancy(level?: number): string {
 		return '$' + this.name + '!';
@@ -105,8 +107,10 @@ export class ImplicationPropositionAST extends Proposition {
 	clone() {
 		return new ImplicationPropositionAST(this.left.clone(), this.right.clone());
 	}
-	findAnyProposition(): string[] {
-		return this.left.findAnyProposition().concat(this.right.findAnyProposition());
+	findAnyProposition(isPreApply = false): string[] {
+		return this.left
+			.findAnyProposition((isPreApply = false))
+			.concat(this.right.findAnyProposition((isPreApply = false)));
 	}
 	displayFancy(level?: number): string {
 		if (level == 1) {
@@ -136,8 +140,10 @@ export class IffPropositionAST extends Proposition {
 	clone() {
 		return new IffPropositionAST(this.left.clone(), this.right.clone());
 	}
-	findAnyProposition(): string[] {
-		return this.left.findAnyProposition().concat(this.right.findAnyProposition());
+	findAnyProposition(isPreApply = false): string[] {
+		return this.left
+			.findAnyProposition((isPreApply = false))
+			.concat(this.right.findAnyProposition((isPreApply = false)));
 	}
 	displayFancy(level?: number): string {
 		if (level == 1) {
@@ -162,8 +168,8 @@ export class NotPropositionAST extends Proposition {
 	clone() {
 		return new NotPropositionAST(this.prop.clone());
 	}
-	findAnyProposition(): string[] {
-		return this.prop.findAnyProposition();
+	findAnyProposition(isPreApply = false): string[] {
+		return this.prop.findAnyProposition((isPreApply = false));
 	}
 	displayFancy(level?: number): string {
 		return `¬${this.prop.displayFancy(1)}`;
@@ -190,8 +196,10 @@ export class DisjunctionPropositionAST extends Proposition {
 	clone() {
 		return new DisjunctionPropositionAST(this.left.clone(), this.right.clone());
 	}
-	findAnyProposition(): string[] {
-		return this.left.findAnyProposition().concat(this.right.findAnyProposition());
+	findAnyProposition(isPreApply = false): string[] {
+		return this.left
+			.findAnyProposition((isPreApply = false))
+			.concat(this.right.findAnyProposition((isPreApply = false)));
 	}
 	displayFancy(level?: number): string {
 		if (level == 1) {
@@ -221,8 +229,10 @@ export class ConjunctionPropositionAST extends Proposition {
 	clone() {
 		return new ConjunctionPropositionAST(this.left.clone(), this.right.clone());
 	}
-	findAnyProposition(): string[] {
-		return this.left.findAnyProposition().concat(this.right.findAnyProposition());
+	findAnyProposition(isPreApply = false): string[] {
+		return this.left
+			.findAnyProposition((isPreApply = false))
+			.concat(this.right.findAnyProposition((isPreApply = false)));
 	}
 	displayFancy(level?: number): string {
 		if (level == 1) {

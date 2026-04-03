@@ -121,12 +121,7 @@ async function replQuestion() {
 					console.error("User Theorem must starts with 's' or '.'");
 					continue;
 				}
-				FormalSystemRule.asTheorem(
-					formalSystem.hypothesis,
-					formalSystem.steps[stepId].proposition,
-					formalSystem.steps,
-					name,
-				).addInto(formalSystem, name);
+				formalSystem.toNewTheorem(name);
 				console.log(`Added theorem "${name}".`);
 				continue;
 			}

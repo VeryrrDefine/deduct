@@ -70,6 +70,15 @@ export class FormalSystem {
 		});
 	}
 
+	toNewTheorem(name: string, stepId?: number) {
+		return FormalSystemRule.asTheorem(
+			this.hypothesis,
+			this.steps[stepId ?? this.steps.length - 1].proposition,
+			this.steps,
+			name,
+		).addInto(this, name);
+	}
+
 	getUserTheorems(): string[] {
 		let keys = Object.keys(this.rules);
 
@@ -349,12 +358,7 @@ export class FormalSystem {
 				.applyRule([-1, nhyp], ss1_ss2_1, ss1)
 				.applyResultAndDeduct(undefined, this);
 
-			let ther = FormalSystemRule.asTheorem(
-				this.hypothesis,
-				this.steps[this.steps.length - 1].proposition,
-				this.steps,
-				'<' + idx,
-			).addInto(this, '<' + idx);
+			const ther = this.toNewTheorem('<' + idx);
 
 			this.steps = oldP;
 			this.hypothesis = oldH;
