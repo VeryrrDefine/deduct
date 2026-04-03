@@ -73,7 +73,11 @@ class CstToAstVisitor extends parserInstance.getBaseCstVisitorConstructor() {
 
 	notProposition(ctx: any): any {
 		if (ctx.Not) {
-			return new NotPropositionAST(this.visit(ctx.baseProposition));
+			let goal = this.visit(ctx.baseProposition);
+			for (let i = 0; i < ctx.Not.length; i++) {
+				goal = new NotPropositionAST(goal);
+			}
+			return goal;
 		}
 		return this.visit(ctx.baseProposition);
 	}

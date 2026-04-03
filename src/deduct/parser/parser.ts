@@ -79,7 +79,9 @@ export class PropositionParser extends CstParser {
 
 	public notProposition = this.RULE('notProposition', () => {
 		this.OPTION(() => {
-			this.CONSUME(Not);
+			this.MANY(() => {
+				this.CONSUME(Not);
+			});
 		});
 		this.SUBRULE(this.baseProposition);
 	});
