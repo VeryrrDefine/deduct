@@ -69,14 +69,7 @@ async function replQuestion() {
 			}
 			if (command === 'exit') break;
 			if (command === 'rules') {
-				// for (const key in RULES) {
-				// 	//@ts-ignore
-				// 	console.log(`${key}\t\t${RULES[key].toString()}`);
-				// }
-				// for (const key in userTheorems) {
-				// 	//@ts-ignore
-				// 	console.log(`${key}\t\t${userTheorems[key].toString()}`);
-				// }
+				console.table(formalSystem.listRuleDetails());
 				continue;
 			}
 			if (command === 'pop') {
@@ -90,14 +83,7 @@ async function replQuestion() {
 				continue;
 			}
 			if (command === 'list') {
-				for (let i = 0; i < formalSystem.hypothesis.length; i++) {
-					const step = formalSystem.hypothesis[i];
-					console.log(`h${i}\t\t\t${step.toString()}`);
-				}
-				for (let i = 0; i < formalSystem.steps.length; i++) {
-					const step = formalSystem.steps[i];
-					console.log(`p${i}\t\t${step.rule_id}\t${step.proposition}`);
-				}
+				console.table(formalSystem.listStepDetails());
 				continue;
 			}
 			if (command === 'save') {

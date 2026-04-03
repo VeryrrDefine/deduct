@@ -119,6 +119,44 @@ export class FormalSystem {
 		return leftAST?.toString?.() === rightAST?.toString?.();
 	}
 
+	listRules() {
+		return Object.entries(this.rules);
+	}
+
+	listRuleDetails() {
+		let res = [];
+		let index = 0;
+		for (const rule of this.listRules()) {
+			res.push({ RuleId: rule[0], Content: rule[1].toString() });
+			index++;
+		}
+		return res;
+	}
+
+	listStepDetails() {
+		let res = [];
+		for (let i = 0; i < this.hypothesis.length; i++) {
+			res.push({
+				theoremId: `h${i}`,
+				proposition: this.hypothesis[i].toString(),
+				operation: 'hyp',
+			});
+		}
+		for (let i = 0; i < this.steps.length; i++) {
+			const step = this.steps[i];
+			res.push({
+				theoremId: `p${i}`,
+				proposition: step.proposition.toString(),
+				operation:
+					step.rule_id +
+					(step.chosen_condition.length !== 0
+						? ` ` + step.chosen_condition.join(', ')
+						: ''),
+			});
+		}
+		return res;
+	}
+
 	/**
 	 * 移除最后的几个命题
 	 */
