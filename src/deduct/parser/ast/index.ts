@@ -14,6 +14,11 @@ export class Proposition {
 	displayFancy(level?: number) {
 		return '';
 	}
+
+	/**
+	 * Some extra informations of this proposition
+	 */
+	payload: any;
 }
 export class LetterPropositionAST extends Proposition {
 	name;
@@ -69,7 +74,7 @@ export class AnyPropositionPreApplyAST extends Proposition {
 		this.name = name ?? '';
 	}
 	toString(): string {
-		return `(!${this.name})`;
+		return `($${this.name}!)`;
 	}
 	replaceAnyProposition(x: string, replaceTo: Proposition, ispreapply = false): Proposition {
 		if (ispreapply && this.name == x) return replaceTo;
@@ -109,8 +114,8 @@ export class ImplicationPropositionAST extends Proposition {
 	}
 	findAnyProposition(isPreApply = false): string[] {
 		return this.left
-			.findAnyProposition((isPreApply = false))
-			.concat(this.right.findAnyProposition((isPreApply = false)));
+			.findAnyProposition(isPreApply)
+			.concat(this.right.findAnyProposition(isPreApply));
 	}
 	displayFancy(level?: number): string {
 		if (level == 1) {
@@ -142,8 +147,8 @@ export class IffPropositionAST extends Proposition {
 	}
 	findAnyProposition(isPreApply = false): string[] {
 		return this.left
-			.findAnyProposition((isPreApply = false))
-			.concat(this.right.findAnyProposition((isPreApply = false)));
+			.findAnyProposition(isPreApply)
+			.concat(this.right.findAnyProposition(isPreApply));
 	}
 	displayFancy(level?: number): string {
 		if (level == 1) {
@@ -169,7 +174,7 @@ export class NotPropositionAST extends Proposition {
 		return new NotPropositionAST(this.prop.clone());
 	}
 	findAnyProposition(isPreApply = false): string[] {
-		return this.prop.findAnyProposition((isPreApply = false));
+		return this.prop.findAnyProposition(isPreApply);
 	}
 	displayFancy(level?: number): string {
 		return `¬${this.prop.displayFancy(1)}`;
@@ -198,8 +203,8 @@ export class DisjunctionPropositionAST extends Proposition {
 	}
 	findAnyProposition(isPreApply = false): string[] {
 		return this.left
-			.findAnyProposition((isPreApply = false))
-			.concat(this.right.findAnyProposition((isPreApply = false)));
+			.findAnyProposition(isPreApply)
+			.concat(this.right.findAnyProposition(isPreApply));
 	}
 	displayFancy(level?: number): string {
 		if (level == 1) {
@@ -231,8 +236,8 @@ export class ConjunctionPropositionAST extends Proposition {
 	}
 	findAnyProposition(isPreApply = false): string[] {
 		return this.left
-			.findAnyProposition((isPreApply = false))
-			.concat(this.right.findAnyProposition((isPreApply = false)));
+			.findAnyProposition(isPreApply)
+			.concat(this.right.findAnyProposition(isPreApply));
 	}
 	displayFancy(level?: number): string {
 		if (level == 1) {

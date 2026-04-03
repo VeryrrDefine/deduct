@@ -26,6 +26,7 @@ class CstToAstVisitor extends parserInstance.getBaseCstVisitorConstructor() {
 		let conditions = ctx.proposition.slice(0, -1);
 		for (let i = 0; i < conditions.length; i++) {
 			conditions[i] = this.visit(conditions[i]);
+			conditions[i].payload = i;
 		}
 		return new FormalSystemRule(conditions, last);
 	}

@@ -17,6 +17,7 @@ export class FormalSystemRule {
 	steps: Step[];
 	isTheorem = false;
 	name = '';
+	payload: any;
 	constructor(condition: Proposition[], result: Proposition) {
 		this.condition = condition;
 		this.result = result;
@@ -106,12 +107,13 @@ export class RuleResult {
 	}
 	applyResultAndDeduct(tables: MatchTable | undefined, fs: FormalSystem) {
 		let proposition = this.applyResult(tables);
-		fs.addProposition(
+		proposition.payload = fs.addProposition(
 			proposition,
 			this.rule_id,
 			this.chosen_condition,
 			Object.fromEntries(this.replaceable.map((x) => [x, '$' + x])),
 		);
+
 		return proposition;
 	}
 	toString() {

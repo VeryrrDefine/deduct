@@ -1,5 +1,6 @@
 import {
 	AnyPropositionAST as AnyProp,
+	AnyPropositionAST,
 	IffPropositionAST as Iff,
 	ImplicationPropositionAST as Impl,
 	ImplicationPropositionAST,
@@ -8,6 +9,7 @@ import {
 	Proposition,
 	type Proposition as Prop,
 } from '../parser/ast';
+import { toProposition } from '../parser/compiler';
 import { RuleParser } from '../parser/parserule-structure';
 import { LogicError, MatchError } from './errors';
 import { FormalSystemRule } from './fsRule';
@@ -68,10 +70,12 @@ export class FormalSystem {
 			chosen_condition,
 			match_map,
 		});
+		return this.steps.length - 1;
 	}
 
 	addHypothesis(hyp: Proposition) {
 		this.hypothesis.push(hyp);
+		return this.hypothesis.length - 1;
 	}
 
 	toNewTheorem(name: string, stepId?: number) {
@@ -104,9 +108,6 @@ export class FormalSystem {
 		//match方法中currentAST的$0,$1 是类似于字母类型的命题，而要匹配goalAST中的$xxx，故只处理了goalAST 是anyprop的情况。
 		if (goalAST instanceof AnyProp) {
 			if (this.freeEquals(currentAST, anyPropositionMap[goalAST.name])) {
-				FormalSystem.debugLog(
-					`Matched ${goalAST.name} to goalAST(left) ${currentAST.toString()}.`,
-				);
 				anyPropositionMap[goalAST.name] = currentAST;
 			} else {
 				throw new MatchError(
@@ -119,7 +120,6 @@ export class FormalSystem {
 		if (currentAST instanceof Impl && goalAST instanceof Impl) {
 			this.match(currentAST.left, goalAST.left, anyPropositionMap);
 			this.match(currentAST.right, goalAST.right, anyPropositionMap);
-			FormalSystem.debugLog(`Matched implication: ${currentAST} and ${goalAST}`);
 			return;
 		}
 		// 如果一个是蕴含另一个不是，则抛出类型不匹配
@@ -130,7 +130,6 @@ export class FormalSystem {
 		if (currentAST instanceof Iff && goalAST instanceof Iff) {
 			this.match(currentAST.left, goalAST.left, anyPropositionMap);
 			this.match(currentAST.right, goalAST.right, anyPropositionMap);
-			FormalSystem.debugLog(`Matched iff: ${currentAST} and ${goalAST}`);
 			return;
 		}
 		// 如果一个是当且仅当另一个不是，则抛出类型不匹配
@@ -140,7 +139,6 @@ export class FormalSystem {
 
 		if (currentAST instanceof Not && goalAST instanceof Not) {
 			this.match(currentAST.prop, goalAST.prop, anyPropositionMap);
-			FormalSystem.debugLog(`Matched not: ${currentAST} and ${goalAST}`);
 			return;
 		}
 
@@ -332,10 +330,20 @@ export class FormalSystem {
 				if (x.metaRules.startsWith('<')) {
 					return this.metaInvDeductTheorem(x.ruleString.slice(1));
 				}
+				if (x.metaRules.startsWith('c')) {
+					return this.metaConditionTheorem(x.ruleString.slice(1));
+				}
 				throw new Error(`Not supported: ${x.metaRules[0]}`);
 			}
 		}
 		return null;
+	}
+	relatively(x: number) {
+		return x - this.steps.length;
+	}
+	getPropositionFromId(x: number) {
+		if (x >= 0) return this.hypothesis[x];
+		else return this.steps[this.steps.length + x].proposition;
 	}
 	metaInvDeductTheorem(idx: string): FormalSystemRule | null {
 		if (idx[0] === '>') {
@@ -356,9 +364,9 @@ export class FormalSystem {
 		try {
 			this.removePropositions(1 / 0);
 			this.hypothesis = [];
-			rule.condition.forEach((c) => this.hypothesis.push(c));
-			this.hypothesis.push(ss1);
-			const nhyp = this.hypothesis.length - 1;
+			rule.condition.forEach((c) => this.addHypothesis(c));
+
+			const nhyp = this.addHypothesis(ss1);
 
 			let chosen_condition = [];
 			for (let i = 0; i < rule.condition.length; i++) {
@@ -369,13 +377,105 @@ export class FormalSystem {
 				.applyResultAndDeduct(undefined, this);
 
 			this.rules.mp
-				.applyRule([-1, nhyp], ss1_ss2_1, ss1)
+				.applyRule([this.relatively(ss1_ss2_1.payload), nhyp], ss1_ss2_1, ss1)
 				.applyResultAndDeduct(undefined, this);
 
 			const ther = this.toNewTheorem('<' + idx);
 
 			this.steps = oldP;
 			this.hypothesis = oldH;
+			return ther;
+		} catch (e) {
+			this.steps = oldP;
+			this.hypothesis = oldH;
+			throw e;
+		}
+	}
+	metaConditionTheorem(idx: string): FormalSystemRule | null {
+		if (this.ruleExists('c' + idx)) return this.findRules('c' + idx);
+		const rule = this.genRule(idx);
+		if (!rule) throw new Error('Rule not exists');
+		const oldP = this.steps;
+		const oldH = this.hypothesis;
+
+		const newPArray = rule.condition
+			.map((x) => x.findAnyProposition(true))
+			.concat(rule.result.findAnyProposition(true))
+			.flat();
+		let new2 = 0;
+		while (newPArray.includes('' + new2)) {
+			new2++;
+		}
+		let new3 = new AnyPropositionAST('' + new2);
+		try {
+			this.removePropositions(1 / 0);
+			this.hypothesis = [];
+			if (rule.condition.length == 0) {
+				const s1 = rule.applyRule([]).applyResultAndDeduct(undefined, this);
+				const s1_n_s1 = this.rules.a1.applyRule([]).applyResultAndDeduct(
+					{
+						'1': new3,
+						'0': s1,
+					},
+					this,
+				);
+				this.rules.mp
+					.applyRule(
+						[this.relatively(s1_n_s1.payload), this.relatively(s1.payload)],
+						s1_n_s1,
+						s1,
+					)
+					.applyResultAndDeduct(undefined, this);
+				const ther = this.toNewTheorem('c' + idx);
+
+				this.steps = oldP;
+				this.hypothesis = oldH;
+				ther.payload = new2;
+				return ther;
+			}
+			if (rule == this.rules.mp) {
+				const iia2 = this.findRules('<<a2');
+				let $201 = toProposition('$2>$0>$1');
+				let $20 = toProposition('$2>$0');
+				let $201n = this.addHypothesis($201);
+				let $20n = this.addHypothesis($20);
+				iia2.applyRule([$201n, $20n], $201, $20).applyResultAndDeduct(undefined, this);
+
+				const ther = this.toNewTheorem('cmp');
+
+				this.steps = oldP;
+				this.hypothesis = oldH;
+				ther.payload = '2';
+				return ther;
+			}
+			rule.condition.forEach((c) =>
+				this.addHypothesis(new ImplicationPropositionAST(new3, c)),
+			);
+
+			for (let i = 0; i < rule.steps.length; i++) {
+				const thisStep = rule.steps[i];
+				const step_ruleId = thisStep.rule_id;
+				const conditionedRule = this.findRules(`c${step_ruleId}`);
+				let res = conditionedRule
+					.applyRule(
+						thisStep.chosen_condition,
+						...thisStep.chosen_condition.map((x) => this.getPropositionFromId(x)),
+					)
+					.applyResultAndDeduct(
+						Object.fromEntries(
+							Object.entries(thisStep.match_map)
+								.map((x) => [x[0], toProposition(x[1])])
+								.concat([[conditionedRule.payload, new3]]),
+						),
+						this,
+					);
+			}
+
+			const ther = this.toNewTheorem('c' + idx);
+
+			this.steps = oldP;
+			this.hypothesis = oldH;
+			ther.payload = new2;
 			return ther;
 		} catch (e) {
 			this.steps = oldP;

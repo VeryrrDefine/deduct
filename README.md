@@ -26,11 +26,11 @@ Load theorems: type `load`
 
 ## Builtin Meta-Theorems
 
-`midt` (Use by `<`+Rule )
+`midt` (Use by `<`+Rule ), `c`
 
 ## TODO List:
 
-Meta Theorems `c, >, v`, `mcpt`
+Meta Theorems `>, v`, `mcpt`
 
 1st-Order Logic Proposition Parsing
 
