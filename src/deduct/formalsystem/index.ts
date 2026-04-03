@@ -19,7 +19,7 @@ export class FormalSystem {
 		return;
 		return console.debug(...args);
 	}
-	rules: {
+	private rules: {
 		[key: string]: FormalSystemRule;
 	} = {
 		mp: FormalSystemRule.fromString('$0>$1, $0|-$1', 'mp'),
@@ -70,7 +70,13 @@ export class FormalSystem {
 		});
 	}
 
+	addHypothesis(hyp: Proposition) {
+		this.hypothesis.push(hyp);
+	}
+
 	toNewTheorem(name: string, stepId?: number) {
+		if (!this.steps[stepId ?? this.steps.length - 1])
+			throw new LogicError('Invalid theorem id or theorem not exists');
 		return FormalSystemRule.asTheorem(
 			this.hypothesis,
 			this.steps[stepId ?? this.steps.length - 1].proposition,
@@ -263,6 +269,7 @@ export class FormalSystem {
 	}
 
 	moveProposition(src: number, dst: number) {
+		if (!this.steps[src] || !this.steps[dst]) throw new Error('Invalid src and destination');
 		if (dst === -1) dst = this.steps.length;
 		if (src === dst || dst === src + 1) return;
 

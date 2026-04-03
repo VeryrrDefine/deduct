@@ -98,7 +98,7 @@ async function replQuestion() {
 						console.log('Hypothesis removed');
 						continue;
 					}
-					formalSystem.hypothesis.push(toProposition(hyp));
+					formalSystem.addHypothesis(toProposition(hyp));
 				}
 				continue;
 			}
@@ -112,16 +112,13 @@ async function replQuestion() {
 				}
 				const name = parts[1];
 				// 如果没有输入stepId,默认取最后一个
-				const stepId = Number(parts[2] || formalSystem.steps.length - 1);
-				if (isNaN(stepId) || !formalSystem.steps[stepId]) {
-					console.error('Invalid step ID');
-					continue;
-				}
+				const stepId = parts[2];
+
 				if (!name.startsWith('s') && !name.startsWith('.')) {
 					console.error("User Theorem must starts with 's' or '.'");
 					continue;
 				}
-				formalSystem.toNewTheorem(name);
+				formalSystem.toNewTheorem(name, stepId !== undefined ? Number(stepId) : undefined);
 				console.log(`Added theorem "${name}".`);
 				continue;
 			}
@@ -136,14 +133,6 @@ async function replQuestion() {
 
 				if (isNaN(src) || isNaN(dst)) {
 					console.error('Invalid number');
-					continue;
-				}
-				if (!formalSystem.steps[src] || !formalSystem.steps[dst]) {
-					console.error('Invalid theorem ID');
-					continue;
-				}
-				if (src === dst) {
-					console.log('Nothing happens');
 					continue;
 				}
 				formalSystem.moveProposition(src, dst);
