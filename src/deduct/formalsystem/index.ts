@@ -23,7 +23,7 @@ export class FormalSystem {
 	} = {
 		mp: FormalSystemRule.fromString('$0>$1, $0|-$1', 'mp'),
 		a1: FormalSystemRule.fromString('|-$0>($1>$0)', 'a1'),
-		a2: FormalSystemRule.fromString('|-($0>($1>$2))>(($0>$1)>($0>$2))', ' a2'),
+		a2: FormalSystemRule.fromString('|-($0>($1>$2))>(($0>$1)>($0>$2))', 'a2'),
 		a3: FormalSystemRule.fromString('|-(~$0>~$1)>($1>$0)', 'a3'),
 		'd<>1': FormalSystemRule.fromString('|-($0<>$1)>~(($0>$1)>~($1>$0))', 'd<>1'),
 		'd<>2': FormalSystemRule.fromString('|-~(($0>$1)>~($1>$0))>($0<>$1)', 'd<>2'),
@@ -174,7 +174,7 @@ export class FormalSystem {
 				operation:
 					step.rule_id +
 					(step.chosen_condition.length !== 0
-						? ` ` + step.chosen_condition.join(', ')
+						? ' ' + step.chosen_condition.join(', ')
 						: ''),
 			});
 		}
