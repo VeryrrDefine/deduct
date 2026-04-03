@@ -32,7 +32,7 @@ export class FormalSystemRule {
 	addInto(fs: FormalSystem, id: string) {
 		fs.addRule(this, id);
 	}
-	applyRule(...propositions: Proposition[]) {
+	applyRule(chosen_condition: number[], ...propositions: Proposition[]) {
 		if (propositions.length !== this.conditionNumber)
 			throw new LogicError("Proposition numbers doesn't match");
 
@@ -50,7 +50,7 @@ export class FormalSystemRule {
 			result = result.replaceAnyProposition(key, matchTable[key], true);
 		}
 		FormalSystem.debugLog(`Fin: ${result}`);
-		return new RuleResult(result);
+		return new RuleResult(result, this.name, chosen_condition);
 	}
 	toString() {
 		let result = this.condition.map((x) => x.toString()).join(',');
@@ -59,16 +59,22 @@ export class FormalSystemRule {
 
 		return result;
 	}
-	static fromString(x: string): FormalSystemRule {
-		return parseAndConvertToAst(x, true);
+	static fromString(x: string, id: string): FormalSystemRule {
+		let p = parseAndConvertToAst(x, true);
+		p.name = id;
+		return p;
 	}
 }
 export class RuleResult {
 	result: Proposition;
 	replaceable: string[];
-	constructor(result: Proposition) {
+	rule_id: string;
+	chosen_condition: number[];
+	constructor(result: Proposition, rule_id: string, chosen_condition: number[]) {
 		this.result = result;
 		this.replaceable = [...new Set(result.findAnyProposition())];
+		this.rule_id = rule_id;
+		this.chosen_condition = chosen_condition;
 	}
 	applyResult(tables: MatchTable) {
 		const keys = Object.keys(tables);
@@ -78,6 +84,16 @@ export class RuleResult {
 			result = result.replaceAnyProposition(key, tables[key], true);
 		}
 		return result;
+	}
+	applyResultAndDeduct(tables: MatchTable, fs: FormalSystem) {
+		let proposition = this.applyResult(tables);
+		fs.addProposition(
+			proposition,
+			this.rule_id,
+			this.chosen_condition,
+			Object.fromEntries(Object.entries(tables).map((x) => [x[0], x[1].toString()])),
+		);
+		return proposition;
 	}
 	toString() {
 		return `[PRE-APPLIED] ${this.result}`;

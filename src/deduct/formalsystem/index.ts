@@ -10,7 +10,7 @@ import {
 import { parseAndConvertToAst } from '../parser/compiler';
 import { LogicError, MatchError } from './errors';
 import { FormalSystemRule } from './fsRule';
-import type { MatchTable } from './matchTable';
+import type { MatchStrTable, MatchTable } from './matchTable';
 import type { Step } from './step';
 
 export class FormalSystem {
@@ -21,14 +21,14 @@ export class FormalSystem {
 	rules: {
 		[key: string]: FormalSystemRule;
 	} = {
-		mp: FormalSystemRule.fromString('$0>$1, $0|-$1'),
-		a1: FormalSystemRule.fromString('|-$0>($1>$0)'),
-		a2: FormalSystemRule.fromString('|-($0>($1>$2))>(($0>$1)>($0>$2))'),
-		a3: FormalSystemRule.fromString('|-(~$0>~$1)>($1>$0)'),
-		'd<>1': FormalSystemRule.fromString('|-($0<>$1)>~(($0>$1)>~($1>$0))'),
-		'd<>2': FormalSystemRule.fromString('|-~(($0>$1)>~($1>$0))>($0<>$1)'),
-		'd|': FormalSystemRule.fromString('⊢($0|$1)<>(~$0>$1)'),
-		'd&': FormalSystemRule.fromString('⊢($0&$1)<>~($0>~$1)'),
+		mp: FormalSystemRule.fromString('$0>$1, $0|-$1', 'mp'),
+		a1: FormalSystemRule.fromString('|-$0>($1>$0)', 'a1'),
+		a2: FormalSystemRule.fromString('|-($0>($1>$2))>(($0>$1)>($0>$2))', ' a2'),
+		a3: FormalSystemRule.fromString('|-(~$0>~$1)>($1>$0)', 'a3'),
+		'd<>1': FormalSystemRule.fromString('|-($0<>$1)>~(($0>$1)>~($1>$0))', 'd<>1'),
+		'd<>2': FormalSystemRule.fromString('|-~(($0>$1)>~($1>$0))>($0<>$1)', 'd<>2'),
+		'd|': FormalSystemRule.fromString('⊢($0|$1)<>(~$0>$1)', 'd|'),
+		'd&': FormalSystemRule.fromString('⊢($0&$1)<>~($0>~$1)', 'd&'),
 	};
 
 	hypothesis: Proposition[] = [];
@@ -43,6 +43,20 @@ export class FormalSystem {
 
 	addRule(fs: FormalSystemRule, id: string) {
 		this.rules[id] = fs;
+	}
+
+	addProposition(
+		prop: Proposition,
+		rule_id: string,
+		chosen_condition: number[],
+		match_map: MatchStrTable,
+	) {
+		this.steps.push({
+			proposition: prop,
+			rule_id: rule_id,
+			chosen_condition,
+			match_map,
+		});
 	}
 
 	getUserTheorems(): string[] {

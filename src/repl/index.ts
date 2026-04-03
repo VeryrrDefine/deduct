@@ -185,7 +185,7 @@ async function replQuestion() {
 			if (uncomplete) {
 				continue;
 			}
-			const ruleResult = rule.applyRule(...conditions);
+			const ruleResult = rule.applyRule(chosen_condition, ...conditions);
 			const replacements: MatchTable = {};
 			const match_map: MatchStrTable = {};
 			for (let i = 0; i < ruleResult.replaceable.length; i++) {
@@ -193,14 +193,8 @@ async function replQuestion() {
 				replacements[ruleResult.replaceable[i]] = parseAndConvertToAst(repl);
 				match_map[ruleResult.replaceable[i]] = repl;
 			}
-			const result = ruleResult.applyResult(replacements);
+			const result = ruleResult.applyResultAndDeduct(replacements, formalSystem);
 			console.log(`Result: ${result}`);
-			formalSystem.steps.push({
-				proposition: result,
-				rule_id: command,
-				chosen_condition,
-				match_map,
-			});
 		} catch (e) {
 			console.error(e);
 		}
