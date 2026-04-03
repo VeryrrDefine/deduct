@@ -190,7 +190,9 @@ async function replQuestion() {
 			if (command.startsWith('theorem')) {
 				const parts = command.split(' ');
 				if (parts.length < 2) {
-					console.error('Usage: theorem s<name> [stepId]');
+					console.error(
+						"Usage: theorem <name> [stepId]\nName must starts with 's' or '.'",
+					);
 					continue;
 				}
 				const name = parts[1];
@@ -200,8 +202,8 @@ async function replQuestion() {
 					console.error('Invalid step ID');
 					continue;
 				}
-				if (!name.startsWith('s')) {
-					console.error("User Theorem must starts with 's'");
+				if (!name.startsWith('s') && !name.startsWith('.')) {
+					console.error("User Theorem must starts with 's' or '.'");
 					continue;
 				}
 				let hypothesis = steps.filter((x) => x.rule_id == 'hyp').map((x) => x.proposition);
