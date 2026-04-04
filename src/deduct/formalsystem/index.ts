@@ -13,7 +13,7 @@ import { toProposition } from '../parser/compiler';
 import { RuleParser } from '../parser/parserule-structure';
 import { LogicError, MatchError } from './errors';
 import { FormalSystemRule } from './fsRule';
-import type { MatchStrTable, MatchTable } from './matchTable';
+import { matchStrTableToTable, type MatchStrTable, type MatchTable } from './matchTable';
 import type { Step } from './step';
 
 export class FormalSystem {
@@ -72,6 +72,8 @@ export class FormalSystem {
 		});
 		return this.steps.length - 1;
 	}
+
+	deduct(deductionIdx: string, replaceValues: MatchTable, conditionIdxs: number[]) {}
 
 	addHypothesis(hyp: Proposition) {
 		this.hypothesis.push(hyp);
@@ -456,19 +458,14 @@ export class FormalSystem {
 				const thisStep = rule.steps[i];
 				const step_ruleId = thisStep.rule_id;
 				const conditionedRule = this.findRules(`c${step_ruleId}`);
+				let matchmap = matchStrTableToTable(thisStep.match_map);
+				matchmap[conditionedRule.payload] = new3;
 				let res = conditionedRule
 					.applyRule(
 						thisStep.chosen_condition,
 						...thisStep.chosen_condition.map((x) => this.getPropositionFromId(x)),
 					)
-					.applyResultAndDeduct(
-						Object.fromEntries(
-							Object.entries(thisStep.match_map)
-								.map((x) => [x[0], toProposition(x[1])])
-								.concat([[conditionedRule.payload, new3]]),
-						),
-						this,
-					);
+					.applyResultAndDeduct(matchmap, this);
 			}
 
 			const ther = this.toNewTheorem('c' + idx);
