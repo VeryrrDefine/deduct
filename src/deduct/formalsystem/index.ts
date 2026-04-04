@@ -532,107 +532,86 @@ export class FormalSystem {
 			this.removePropositions(1 / 0);
 			this.hypothesis = [];
 
-			// 首先添加前几个假设，（没有最后一个）
-			d.condition.forEach((c, id) => {
-				if (id !== d.condition.length - 1) {
-					this.addHypothesis(c);
-				} else {
-					s = c;
-				}
-			});
-			//最后一个假设记为s
-			/**
-			 * 存储原步骤与新步骤间的关系
-			 */
-			let stepPayload: number[] = [];
-
-			/**
-			 * 存储原假设和新构造的s->假设的关系
-			 */
-			let hypothesis_conditioned: number[] = [];
-			for (let hyp2 = 0; hyp2 < d.condition.length - 1; hyp2++) {
-				hypothesis_conditioned.push(
-					this.deduct(
-						'<a1',
-						{
-							'1': s,
-						},
-						[hyp2],
-					)[1],
-				);
+			// 1. 添加前 m-1 个假设
+			const conditionLength = d.condition.length;
+			const lastHyp = d.condition[conditionLength - 1]; // 最后一个假设
+			for (let i = 0; i < conditionLength - 1; i++) {
+				this.addHypothesis(d.condition[i]);
 			}
-			console.log(hypothesis_conditioned);
-			// 构造s->s
-			hypothesis_conditioned.push(this.deduct('.i', { '0': s }, [])[1]);
 
-			for (let m = 0; m < d.steps.length; m++) {
-				const step = d.steps[m];
+			// 2. 为每个假设（包括 s）生成 s -> 假设
+			const hypToCondIdx: number[] = [];
+			for (let i = 0; i < conditionLength - 1; i++) {
+				// 使用公理 A1: H -> (s -> H)，然后 MP 得到 s -> H
+				// 这里需要先有 H 的假设（索引 i），然后应用规则 "<a1" 得到 s -> H
+				const hypIdx = i;
+				const sImpHypIdx = this.deduct('<a1', { '1': lastHyp }, [hypIdx])[1];
+				hypToCondIdx.push(sImpHypIdx);
+			}
+			// s -> s 自身
+			const sImpSIdx = this.deduct('.i', { '0': lastHyp }, [])[1];
+			hypToCondIdx.push(sImpSIdx); // 索引 m-1 对应 s
 
-				// 如果这个步骤所需的条件不包含假设
-				if (!step.chosen_condition.includes(this.hypothesis.length - 1 + 1)) {
-					// 首先构造原先的命题A
-					let thisstep = this.deduct(
+			// 3. 处理原规则的每个步骤，建立步骤映射
+			const stepToCondIdx: number[] = []; // 与原 steps 顺序一一对应
+			for (const step of d.steps) {
+				// 检查该步骤是否依赖 s
+				const dependsOnS = step.chosen_condition.includes(conditionLength - 1); // 原假设索引 m-1 是 s
+
+				if (!dependsOnS) {
+					// 不依赖 s: 先推导出原步骤结论 A，再生成 s -> A
+
+					const aIdx = this.deduct(
 						step.rule_id,
 						step.match_map,
 						step.chosen_condition,
 					)[1];
-					// 然后构造(s->A)，记录A和s->A的映射
-					stepPayload.push(
-						this.deduct('<a1', { '1': s }, [this.relatively(thisstep)])[1],
-					);
-				} else if (step.proposition.toString() == s.toString()) {
-					// 如果这个命题就是假设本身
-					// 直接记录s和s->s的映射
-					stepPayload.push(hypothesis_conditioned[hypothesis_conditioned.length - 1]);
+					const sImpAIdx = this.deduct('<a1', { '1': lastHyp }, [
+						this.relatively(aIdx),
+					])[1];
+					stepToCondIdx.push(sImpAIdx);
+				} else if (step.proposition.equals(lastHyp)) {
+					// 步骤结论就是 s 本身（例如从假设直接引用）
+					stepToCondIdx.push(hypToCondIdx[conditionLength - 1]); // 使用 s -> s
 				} else {
-					// 如果这个步骤依赖了s
-
-					// 记当前步骤为T，
-					// 原先 A, B, C, s, ... 可以推出 T
-					// 那么根据条件演绎元定理， 有s->A,s->B,s->C,s->s....推出s->T。
-					// 查找每一个A,B,C 查找对应的stepPayload
-
+					// 依赖 s: 需要对子规则应用条件化
+					// 首先确保 c + step.rule_id 存在（若不存在则调用 metaConditionTheorem 生成）
+					let conditionedRuleId = 'c' + step.rule_id;
+					if (!this.ruleExists(conditionedRuleId)) {
+						this.metaConditionTheorem(step.rule_id);
+					}
 					const t = this;
-					let conditions = step.chosen_condition;
-					conditions = conditions.map((x) =>
-						t.relatively(
-							// 筛选，如果x>=0说明是假设，就去假设列表里找，如果<0那么去stepPayload找
-
-							x >= 0 ? hypothesis_conditioned[x] : stepPayload[t.absolutely(x)],
-						),
-					); // 这里的conditions的有时候会选到一个s->Undefined的东西，需要检查
-
-					let checkList = [];
-					for (let bx = 0; bx < conditions.length; bx++) {
-						let fn = conditions[bx];
-						if (fn >= 0) {
-							// 表明stepPayload获取到了undefined，产生了NaN
-							if (isNaN(fn)) {
-								throw new Error('Check');
-							} else {
-								checkList.push(fn);
-							}
+					// 将 step.chosen_condition 中的每个索引映射到 hypToCondIdx 或 stepToCondIdx
+					const mappedConds = step.chosen_condition.map((origIdx) => {
+						if (origIdx >= 0) {
+							// 假设索引
+							if (origIdx >= hypToCondIdx.length)
+								throw new Error(`Invalid hyp index ${origIdx}`);
+							return t.relatively(hypToCondIdx[origIdx]);
 						} else {
-							checkList.push(fn);
+							// 步骤索引（相对）
+							const stepPos = -origIdx - 1;
+							if (stepPos >= stepToCondIdx.length)
+								throw new Error(`Invalid step ref ${origIdx}`);
+							return t.relatively(stepToCondIdx[stepPos]);
 						}
-					}
-					console.log(checkList, 'c' + step.rule_id);
-
-					try {
-						stepPayload.push(
-							this.deduct('c' + step.rule_id, step.match_map, checkList)[1],
-						);
-					} catch (e) {
-						console.table(this.listStepDetails());
-						throw e;
-					}
-					console.log('Done', checkList, 'c' + step.rule_id);
+					});
+					// 有时候conditionedRule 会产生一个新自定义命题，例如c<a1原先产生的<a1时
+					const sImpTIdx = this.deduct(conditionedRuleId, step.match_map, mappedConds)[1];
+					stepToCondIdx.push(sImpTIdx);
 				}
-
-				// else {
-				// 	throw new Error("Meta Deduct Theorem prove failed: Unknown")
-				// }
 			}
+
+			// 4. 最终结论应当是 s -> 原规则结论
+			// 原规则结论对应于 d.result，我们需要找到它在 stepToCondIdx 中的位置？
+			// 实际上，原规则的结论通常由最后一个步骤产生，其索引为 stepToCondIdx[stepToCondIdx.length-1]
+			// 但更可靠的方式是：原规则 d 有一个 result 字段，我们可以直接应用 s -> result 的生成。
+			// 然而，result 可能不在 steps 中显式出现（如果是公理或 MP 直接得到）。所以我们需要特殊处理：
+			// 如果 d.steps 为空（原子规则），则 result 是直接由条件推导出的结论。此时我们需要将条件化应用到整个规则。
+			// 但你的 metaDeductTheorem 已经假设 d.steps 非空（宏规则），所以结论就是最后一个步骤的结论。
+			const finalSImpIdx = stepToCondIdx[stepToCondIdx.length - 1];
+			// 验证 finalSImpIdx 对应的命题确实是 s -> d.result
+			// 可以添加断言
 
 			const ther = this.toNewTheorem('>' + idx);
 
@@ -643,6 +622,7 @@ export class FormalSystem {
 			this.hypothesis = oldH;
 			return ther;
 		} catch (e) {
+			console.table(this.listStepDetails());
 			this.steps = oldP;
 			this.hypothesis = oldH;
 			throw e;

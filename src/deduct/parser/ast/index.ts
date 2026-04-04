@@ -19,6 +19,9 @@ export class Proposition {
 	 * Some extra informations of this proposition
 	 */
 	payload: any;
+	equals(x: Proposition) {
+		return this.toString() == x.toString();
+	}
 }
 export class LetterPropositionAST extends Proposition {
 	name;
