@@ -32,6 +32,8 @@ export class FormalSystem {
 		'd<>2': FormalSystemRule.fromString('|-~(($0>$1)>~($1>$0))>($0<>$1)', 'd<>2'),
 		'd|': FormalSystemRule.fromString('⊢($0|$1)<>(~$0>$1)', 'd|'),
 		'd&': FormalSystemRule.fromString('⊢($0&$1)<>~($0>~$1)', 'd&'),
+		dtrue: FormalSystemRule.fromString('|-true', 'dtrue'),
+		dfalse: FormalSystemRule.fromString('|-false>~true', 'dfalse'),
 	};
 
 	hypothesis: Proposition[] = [];
@@ -73,7 +75,33 @@ export class FormalSystem {
 		return this.steps.length - 1;
 	}
 
-	deduct(deductionIdx: string, replaceValues: MatchTable, conditionIdxs: number[]) {}
+	/**
+	 *
+	 * @param deductionIdx
+	 * @param replaceValues
+	 * @param conditionIdxs
+	 * @returns absolute position
+	 */
+	deduct(
+		deductionIdx: string,
+		replaceValues: MatchTable | MatchStrTable | undefined,
+		conditionIdxs: number[],
+	): [Proposition, number] {
+		const rule = this.findRules(deductionIdx);
+		let repl = replaceValues;
+		if (repl) {
+			let read2 = Object.entries(repl);
+			if (typeof read2[0]?.[1] == 'string') {
+				repl = matchStrTableToTable(repl as MatchStrTable);
+			}
+		}
+		const conditions = conditionIdxs.map((x) => this.getPropositionFromId(x));
+		let result = rule
+			.applyRule(conditionIdxs, ...conditions)
+			.applyResultAndDeduct(repl as MatchTable | undefined, this);
+
+		return [result, result.payload];
+	}
 
 	addHypothesis(hyp: Proposition) {
 		this.hypothesis.push(hyp);
@@ -374,13 +402,9 @@ export class FormalSystem {
 			for (let i = 0; i < rule.condition.length; i++) {
 				chosen_condition.push(i);
 			}
-			const ss1_ss2_1 = rule
-				.applyRule(chosen_condition, ...rule.condition)
-				.applyResultAndDeduct(undefined, this);
+			const ss1_ss2_1 = this.deduct(idx, undefined, chosen_condition);
 
-			this.rules.mp
-				.applyRule([this.relatively(ss1_ss2_1.payload), nhyp], ss1_ss2_1, ss1)
-				.applyResultAndDeduct(undefined, this);
+			this.deduct('mp', undefined, [this.relatively(ss1_ss2_1[1]), nhyp]);
 
 			const ther = this.toNewTheorem('<' + idx);
 
@@ -413,21 +437,17 @@ export class FormalSystem {
 			this.removePropositions(1 / 0);
 			this.hypothesis = [];
 			if (rule.condition.length == 0) {
-				const s1 = rule.applyRule([]).applyResultAndDeduct(undefined, this);
-				const s1_n_s1 = this.rules.a1.applyRule([]).applyResultAndDeduct(
+				const s1 = this.deduct(idx, undefined, []);
+				const s1_n_s1 = this.deduct(
+					'a1',
 					{
 						'1': new3,
-						'0': s1,
+						'0': s1[0],
 					},
-					this,
+					[],
 				);
-				this.rules.mp
-					.applyRule(
-						[this.relatively(s1_n_s1.payload), this.relatively(s1.payload)],
-						s1_n_s1,
-						s1,
-					)
-					.applyResultAndDeduct(undefined, this);
+				this.deduct('mp', undefined, [this.relatively(s1_n_s1[1]), this.relatively(s1[1])]);
+
 				const ther = this.toNewTheorem('c' + idx);
 
 				this.steps = oldP;
@@ -441,7 +461,8 @@ export class FormalSystem {
 				let $20 = toProposition('$2>$0');
 				let $201n = this.addHypothesis($201);
 				let $20n = this.addHypothesis($20);
-				iia2.applyRule([$201n, $20n], $201, $20).applyResultAndDeduct(undefined, this);
+
+				this.deduct('<<a2', undefined, [$201n, $20n]);
 
 				const ther = this.toNewTheorem('cmp');
 
@@ -460,12 +481,7 @@ export class FormalSystem {
 				const conditionedRule = this.findRules(`c${step_ruleId}`);
 				let matchmap = matchStrTableToTable(thisStep.match_map);
 				matchmap[conditionedRule.payload] = new3;
-				let res = conditionedRule
-					.applyRule(
-						thisStep.chosen_condition,
-						...thisStep.chosen_condition.map((x) => this.getPropositionFromId(x)),
-					)
-					.applyResultAndDeduct(matchmap, this);
+				let res = this.deduct(`c${step_ruleId}`, matchmap, thisStep.chosen_condition);
 			}
 
 			const ther = this.toNewTheorem('c' + idx);

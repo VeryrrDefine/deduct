@@ -165,16 +165,15 @@ async function replQuestion() {
 			if (uncomplete) {
 				continue;
 			}
-			const ruleResult = rule.applyRule(chosen_condition, ...conditions);
 			const replacements: MatchTable = {};
 			const match_map: MatchStrTable = {};
-			for (let i = 0; i < ruleResult.replaceable.length; i++) {
-				const repl = await ask(`Apply $${ruleResult.replaceable[i]}: `);
-				replacements[ruleResult.replaceable[i]] = toProposition(repl);
-				match_map[ruleResult.replaceable[i]] = repl;
+			for (let i = 0; i < rule.replaceable.length; i++) {
+				const repl = await ask(`Apply $${rule.replaceable[i]}: `);
+				replacements[rule.replaceable[i]] = toProposition(repl);
+				match_map[rule.replaceable[i]] = repl;
 			}
-			const result = ruleResult.applyResultAndDeduct(replacements, formalSystem);
-			console.log(`Result: ${result.displayFancy()}`);
+			const result = formalSystem.deduct(command, match_map, chosen_condition);
+			console.log(`Result: ${result[0].displayFancy()}`);
 		} catch (e) {
 			console.error(e);
 		}

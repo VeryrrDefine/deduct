@@ -18,11 +18,30 @@ export class FormalSystemRule {
 	isTheorem = false;
 	name = '';
 	payload: any;
+	replaceable: string[];
 	constructor(condition: Proposition[], result: Proposition) {
 		this.condition = condition;
 		this.result = result;
 		this.conditionNumber = condition.length;
 		this.steps = [];
+
+		this.replaceable = this.getReplaceables();
+	}
+	getReplaceables() {
+		const matchTable: MatchTable = {};
+		for (let i = 0; i < this.conditionNumber; i++) {
+			FormalSystem.match(this.condition[i], this.condition[i], matchTable);
+		}
+
+		let result = this.result.clone().replaceAnyProposition('', new Proposition(), false);
+
+		const keys = Object.keys(matchTable);
+
+		for (const key of keys) {
+			result = result.replaceAnyProposition(key, matchTable[key], true);
+		}
+		let w = [...new Set(result.findAnyProposition())];
+		return w;
 	}
 	static asTheorem(condition: Proposition[], result: Proposition, steps: Step[], name: string) {
 		const rule = new FormalSystemRule(condition, result);
@@ -102,6 +121,11 @@ export class RuleResult {
 		for (const key of keys) {
 			if (!tables[key]) continue;
 			result = result.replaceAnyProposition(key, tables[key], true);
+		}
+		// 找一下有没有没被替换的
+		let differences = result.findAnyProposition(false);
+		for (const lost of differences) {
+			result = result.replaceAnyProposition(lost, new AnyPropositionAST(lost), true);
 		}
 		return result;
 	}

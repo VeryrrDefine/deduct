@@ -945,5 +945,56 @@
         "proposition": "($1)"
       }
     ]
+  },
+  "s_nottrue_impl_anything": {
+    "condition": [
+      "(¬(true))"
+    ],
+    "result": "($0)",
+    "steps": [
+      {
+        "rule_id": "dtrue",
+        "chosen_condition": [],
+        "match_map": {},
+        "proposition": "true"
+      },
+      {
+        "rule_id": ".m",
+        "chosen_condition": [
+          -1,
+          0
+        ],
+        "match_map": {
+          "1": "$1"
+        },
+        "proposition": "($0)"
+      }
+    ]
+  },
+  "s2": {
+    "condition": [
+      "false"
+    ],
+    "result": "($0)",
+    "steps": [
+      {
+        "rule_id": "<dfalse",
+        "chosen_condition": [
+          0
+        ],
+        "match_map": {},
+        "proposition": "(¬(true))"
+      },
+      {
+        "rule_id": "s_nottrue_impl_anything",
+        "chosen_condition": [
+          -1
+        ],
+        "match_map": {
+          "0": "$0"
+        },
+        "proposition": "($0)"
+      }
+    ]
   }
 }
