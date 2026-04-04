@@ -61,6 +61,7 @@ async function replQuestion() {
 			}
 			if (command == 'clear') {
 				formalSystem.removePropositions(Infinity);
+				formalSystem.hypothesis = [];
 				console.log('Cleared.');
 				continue;
 			}
