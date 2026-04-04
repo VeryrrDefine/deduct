@@ -96,10 +96,15 @@ export class FormalSystem {
 			}
 		}
 		const conditions = conditionIdxs.map((x) => this.getPropositionFromId(x));
+		console.log(
+			`Deduction: ${deductionIdx} ${conditionIdxs}, which they are ${conditions.map((x) => (x ? x.displayFancy() : '!!!')).join(', ')}, doing`,
+		);
 		let result = rule
 			.applyRule(conditionIdxs, ...conditions)
 			.applyResultAndDeduct(repl as MatchTable | undefined, this);
-
+		console.log(
+			`Deduction: ${deductionIdx} ${conditionIdxs}, which they are ${conditions.map((x) => (x ? x.displayFancy() : '!!!')).join(', ')}, completed Successfully`,
+		);
 		return [result, result.payload];
 	}
 
@@ -363,6 +368,9 @@ export class FormalSystem {
 				if (x.metaRules.startsWith('c')) {
 					return this.metaConditionTheorem(x.ruleString.slice(1));
 				}
+				if (x.metaRules.startsWith('>')) {
+					return this.metaDeductTheorem(x.ruleString.slice(1));
+				}
 				throw new Error(`Not supported: ${x.metaRules[0]}`);
 			}
 		}
@@ -371,9 +379,16 @@ export class FormalSystem {
 	relatively(x: number) {
 		return x - this.steps.length;
 	}
+	absolutely(x: number) {
+		return this.steps.length + x;
+	}
 	getPropositionFromId(x: number) {
 		if (x >= 0) return this.hypothesis[x];
 		else return this.steps[this.steps.length + x].proposition;
+	}
+	getStepIncludedHyp(x: number) {
+		if (x < this.hypothesis.length) return this.hypothesis[x];
+		return this.steps[x - this.hypothesis.length];
 	}
 	metaInvDeductTheorem(idx: string): FormalSystemRule | null {
 		if (idx[0] === '>') {
@@ -481,7 +496,7 @@ export class FormalSystem {
 				const conditionedRule = this.findRules(`c${step_ruleId}`);
 				let matchmap = matchStrTableToTable(thisStep.match_map);
 				matchmap[conditionedRule.payload] = new3;
-				let res = this.deduct(`c${step_ruleId}`, matchmap, thisStep.chosen_condition);
+				this.deduct(`c${step_ruleId}`, matchmap, thisStep.chosen_condition);
 			}
 
 			const ther = this.toNewTheorem('c' + idx);
@@ -489,6 +504,135 @@ export class FormalSystem {
 			this.steps = oldP;
 			this.hypothesis = oldH;
 			ther.payload = new2;
+			return ther;
+		} catch (e) {
+			this.steps = oldP;
+			this.hypothesis = oldH;
+			throw e;
+		}
+	}
+	metaDeductTheorem(idx: string): FormalSystemRule | null {
+		if (idx[0] === '<') {
+			return this.genRule(idx.slice(1));
+		}
+		// a => <a
+		if (this.ruleExists('>' + idx)) return this.findRules('>' + idx);
+		const d = this.genRule(idx);
+		if (!d) throw new Error('Rule not exists');
+		const oldP = this.steps;
+		const oldH = this.hypothesis;
+
+		if (!d.condition.length) throw new LogicError('No Hypthesis');
+
+		if (idx == 'mp') throw new LogicError('>mp is (($0 > $1) ⊢ ($0 > $1))');
+
+		let s: Proposition = new Proposition();
+
+		try {
+			this.removePropositions(1 / 0);
+			this.hypothesis = [];
+
+			d.condition.forEach((c, id) => {
+				if (id !== d.condition.length - 1) {
+					this.addHypothesis(c);
+				} else {
+					s = c;
+				}
+			});
+
+			let stepPayload: number[] = [];
+
+			let hypothesis_conditioned: number[] = [];
+			for (let hyp2 = 0; hyp2 < d.condition.length - 1; hyp2++) {
+				hypothesis_conditioned.push(
+					this.deduct(
+						'<a1',
+						{
+							'1': s,
+						},
+						[hyp2],
+					)[1],
+				);
+			}
+			console.log(hypothesis_conditioned);
+			// 首先考虑怎么构建假设s的特殊物，($2>$0)>($2>$0)是可以的
+			hypothesis_conditioned.push(this.deduct('.i', { '0': s }, [])[1]);
+
+			for (let m = 0; m < d.steps.length; m++) {
+				/**
+				 * X必须符合如下条件之一：
+				 * 1.X是一个已有的假设
+				 * 2.X是一个逻辑公理
+				 * 3.在这一行前存在两行分别形如a→X、a (mp)
+				 */
+				// 对X(m)分类讨论：
+				// 1.X(m)是一个不是a的假设，或者是一个逻辑公理 （这里step结果不会包含假设，所以一定是一个）
+				const step = d.steps[m];
+
+				if (!step.chosen_condition.includes(this.hypothesis.length - 1 + 1)) {
+					let thisstep = this.deduct(
+						step.rule_id,
+						step.match_map,
+						step.chosen_condition,
+					)[1];
+					// 构造(s->A)
+					stepPayload.push(
+						this.deduct('<a1', { '1': s }, [this.relatively(thisstep)])[1],
+					);
+				} else if (step.proposition.toString() == s.toString()) {
+					stepPayload.push(hypothesis_conditioned[hypothesis_conditioned.length - 1]);
+				} else {
+					// 3.存在n<m，使得s→X(n),s→(X(n)→X(m))已被证明
+					// 实际上是存在n<m，使得s->A,s->B,s->C,....这些神秘东西可以推出s->Fin
+					// 查找对应的stepPayload，直接/bx/bx/bx起来
+
+					const t = this;
+					let conditions = step.chosen_condition;
+					console.log(conditions);
+					conditions = conditions.map((x) =>
+						t.relatively(
+							x >= 0 ? hypothesis_conditioned[x] : stepPayload[t.absolutely(x)],
+						),
+					); // 这里的conditions的有时候会选到一个s->Undefined的东西，需要检查
+
+					let checkList = [];
+					for (let bx = 0; bx < conditions.length; bx++) {
+						let fn = conditions[bx];
+						if (fn >= 0) {
+							if (isNaN(fn)) {
+								throw new Error('Check');
+							} else {
+								checkList.push(fn);
+							}
+						} else {
+							checkList.push(fn);
+						}
+					}
+					console.log(checkList, 'c' + step.rule_id);
+
+					try {
+						stepPayload.push(
+							this.deduct('c' + step.rule_id, step.match_map, checkList)[1],
+						);
+					} catch (e) {
+						console.table(this.listStepDetails());
+						throw e;
+					}
+					console.log('Done', checkList, 'c' + step.rule_id);
+				}
+
+				// else {
+				// 	throw new Error("Meta Deduct Theorem prove failed: Unknown")
+				// }
+			}
+
+			const ther = this.toNewTheorem('>' + idx);
+
+			/**
+			 * 23
+			 */
+			this.steps = oldP;
+			this.hypothesis = oldH;
 			return ther;
 		} catch (e) {
 			this.steps = oldP;
