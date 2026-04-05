@@ -1,7 +1,7 @@
 import { FormalSystem } from './index';
 import { AnyPropositionAST, Proposition } from '../parser/ast';
 import { LogicError } from './errors';
-import type { MatchTable } from './matchTable';
+import { matchTableToStrTable, type MatchStrTable, type MatchTable } from './matchTable';
 import { toRule } from '../parser/compiler';
 import type { Step, StepJSON } from './step';
 
@@ -102,6 +102,7 @@ export class RuleResult {
 	replaceable: string[];
 	rule_id: string;
 	chosen_condition: number[];
+	finalReplaceMap: MatchStrTable = {};
 	constructor(result: Proposition, rule_id: string, chosen_condition: number[]) {
 		this.result = result;
 		this.replaceable = [...new Set(result.findAnyProposition())];
@@ -121,11 +122,14 @@ export class RuleResult {
 		for (const key of keys) {
 			if (!tables[key]) continue;
 			result = result.replaceAnyProposition(key, tables[key], true);
+			this.finalReplaceMap[key] = tables[key].toString();
 		}
 		// 找一下有没有没被替换的
 		let differences = result.findAnyProposition(false);
 		for (const lost of differences) {
-			result = result.replaceAnyProposition(lost, new AnyPropositionAST(lost), true);
+			const t2 = new AnyPropositionAST(lost);
+			result = result.replaceAnyProposition(lost, t2, true);
+			this.finalReplaceMap[lost] = t2.toString();
 		}
 		return result;
 	}
@@ -135,7 +139,7 @@ export class RuleResult {
 			proposition,
 			this.rule_id,
 			this.chosen_condition,
-			Object.fromEntries(this.replaceable.map((x) => [x, '$' + x])),
+			this.finalReplaceMap,
 		);
 
 		return proposition;

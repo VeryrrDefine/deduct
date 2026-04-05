@@ -245,6 +245,7 @@ export class FormalSystem {
 						(step.chosen_condition.length !== 0
 							? ' ' + step.chosen_condition.join(', ')
 							: ''),
+					match_map: step.match_map,
 				});
 			}
 			return res;
@@ -597,6 +598,7 @@ export class FormalSystem {
 						}
 					});
 					// 有时候conditionedRule 会产生一个新自定义命题，例如c<a1原先产生的<a1时
+					console.log(conditionedRuleId, step.match_map);
 					const sImpTIdx = this.deduct(conditionedRuleId, step.match_map, mappedConds)[1];
 					stepToCondIdx.push(sImpTIdx);
 				}

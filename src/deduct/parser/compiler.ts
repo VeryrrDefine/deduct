@@ -107,7 +107,7 @@ export function parseAndConvertToAst(code: string, isRule = false) {
 	const lexResult = PropositionLexer.tokenize(code);
 
 	if (lexResult.errors.length > 0) {
-		throw '词法分析出错：' + lexResult.errors.map((e) => e.message).join(', ');
+		throw `Lexing Error: ${lexResult.errors.map((e) => e.message).join(', ')}, string ${code}`;
 	}
 
 	const parser = new PropositionParser();
