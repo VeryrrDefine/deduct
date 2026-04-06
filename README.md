@@ -24,7 +24,7 @@ Test mdt metaRule: type `testmdt`
 
 ## Builtin axioms & definitions
 
-`mp, a1, a2, a3, d<>1, d<>2, d|, d&`
+`mp, a1, a2, a3, d<>1, d<>2, d|, d&, a5`
 
 ## Builtin Meta-Theorems
 
@@ -36,9 +36,9 @@ Test mdt metaRule: type `testmdt`
 
 Meta Theorems `v`, `mcpt`
 
-1st-Order Logic Proposition Parsing
+∈, = Parsing
 
-Axioms & Definitions `a4, a5, a6, a7, a8, dE, ...`
+Axioms & Definitions `a4, a6, a7, a8, dE, ...`
 
 Peano
 
