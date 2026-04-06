@@ -588,17 +588,24 @@ export class FormalSystem {
 
 				const preChoice = step.chosen_condition.map((x) => {
 					if (x >= 0) return x;
-
+					if (isNaN(stepToPredIdx[www + x])) return NaN;
 					return this.relatively(stepToPredIdx[www + x]);
 				});
 
 				//
 				if (!deeplyDependsOnS) {
+					const expect2 = new ImplicationPropositionAST(lastHyp, step.proposition);
+					for (let i = 0; i < this.steps.length; i++) {
+						if (this.steps[i].proposition.equals(expect2)) {
+							stepToCondIdx[www] = i;
+							continue;
+						}
+					}
 					// 不依赖 s: 先推导出原步骤结论 A，再生成 s -> A
 					// 需要注意前面某些结论可能会错位
 					try {
 						console.log('调试', cond);
-						console.log('Trying to deduct pre proposition...');
+						console.log('Trying to deduct pre proposition...', preChoice);
 						const aIdx = this.deduct(step.rule_id, step.match_map, preChoice)[1];
 						stepToPredIdx[www] = aIdx;
 
@@ -606,7 +613,6 @@ export class FormalSystem {
 							this.relatively(aIdx),
 						]);
 						// 验证是不是正确的
-						const expect2 = new ImplicationPropositionAST(lastHyp, step.proposition);
 						if (!prop2.equals(expect2)) {
 							throw `Assertion failed, Except ${expect2.displayFancy()}, actual ${prop2.displayFancy()}`;
 						}
