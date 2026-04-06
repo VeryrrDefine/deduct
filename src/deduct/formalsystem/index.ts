@@ -1,6 +1,8 @@
 import {
 	AnyPropositionAST as AnyProp,
 	AnyPropositionAST,
+	ConjunctionPropositionAST as Conj,
+	DisjunctionPropositionAST as Disj,
 	IffPropositionAST as Iff,
 	ImplicationPropositionAST as Impl,
 	ImplicationPropositionAST,
@@ -170,6 +172,26 @@ export class FormalSystem {
 		// 如果一个是当且仅当另一个不是，则抛出类型不匹配
 		if (currentAST instanceof Iff || goalAST instanceof Iff) {
 			throw new MatchError('Proposition type mismatch: iff vs non-iff');
+		}
+
+		if (currentAST instanceof Conj && goalAST instanceof Conj) {
+			this.match(currentAST.left, goalAST.left, anyPropositionMap);
+			this.match(currentAST.right, goalAST.right, anyPropositionMap);
+			return;
+		}
+		// 如果一个是当且仅当另一个不是，则抛出类型不匹配
+		if (currentAST instanceof Conj || goalAST instanceof Conj) {
+			throw new MatchError('Proposition type mismatch: conj vs non-conj');
+		}
+
+		if (currentAST instanceof Disj && goalAST instanceof Disj) {
+			this.match(currentAST.left, goalAST.left, anyPropositionMap);
+			this.match(currentAST.right, goalAST.right, anyPropositionMap);
+			return;
+		}
+		// 如果一个是当且仅当另一个不是，则抛出类型不匹配
+		if (currentAST instanceof Disj || goalAST instanceof Disj) {
+			throw new MatchError('Proposition type mismatch: disj vs non-disj');
 		}
 
 		if (currentAST instanceof Not && goalAST instanceof Not) {

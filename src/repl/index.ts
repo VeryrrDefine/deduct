@@ -67,7 +67,7 @@ formalSystem.genRule('>.t');
 async function replQuestion() {
 	while (true) {
 		try {
-			const answer = await ask('>>> ');
+			const answer = await ask(`p${formalSystem.steps.length.toString().padStart(6, '0')}|`);
 			const command = answer.trim();
 			if (command === 'help') {
 				console.log(
@@ -139,6 +139,9 @@ async function replQuestion() {
 				}
 				formalSystem.toNewTheorem(name, stepId !== undefined ? Number(stepId) : undefined);
 				console.log(`Added theorem "${name}".`);
+				await saveTheorems();
+				formalSystem.removePropositions(1 / 0);
+				formalSystem.hypothesis = [];
 				continue;
 			}
 			if (command.startsWith('mv')) {
