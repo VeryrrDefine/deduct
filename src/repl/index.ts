@@ -38,31 +38,26 @@ async function loadTheorems(filename: string = 'proofs.json') {
 	console.log('Loaded successfully');
 }
 await loadTheorems();
-formalSystem.genRule('>.t');
-// let rules_notpassed: string[] = [];
-// let total: number = 0;
-// for (const entry of formalSystem.listRules()) {
-// 	if (entry[1].condition.length >= 1) {
-// 		try {
-// 			total++;
-// 			let res = formalSystem.genRule('>' + entry[0])!;
-// 			console.log('>' + entry, '合格');
-// 			let entry2 = '>' + entry;
-// 			while (res.condition.length >= 1) {
-// 				total++;
-// 				res = formalSystem.genRule('>' + entry2)!;
-// 				console.log('>' + entry2, '合格');
-// 				entry2 = '>' + entry;
-// 			}
-// 		} catch (e) {
-// 			console.error('>' + entry, '不合格');
-// 			rules_notpassed.push('>' + entry);
-// 			console.error(e);
-// 		}
-// 	}
-// }
+function testRule() {
+	let rules_notpassed: string[] = [];
+	let total: number = 0;
+	for (const entry of formalSystem.listRules()) {
+		if (entry[1].condition.length >= 1) {
+			try {
+				total++;
+				let res = formalSystem.genRule('>' + entry[0])!;
+				console.log('>' + entry, '合格');
+				let entry2 = '>' + entry;
+			} catch (e) {
+				console.error('>' + entry, '不合格');
+				rules_notpassed.push('>' + entry);
+				console.error(e);
+			}
+		}
+	}
 
-// console.log(`共 ${total}, ${rules_notpassed.length} 不合格`, rules_notpassed);
+	console.log(`共 ${total}, ${rules_notpassed.length} 不合格`, rules_notpassed);
+}
 
 async function replQuestion() {
 	while (true) {
@@ -74,6 +69,9 @@ async function replQuestion() {
 					`\nDEDUCT v0.0.0 HELP\n\n\nexit\t\t\tExit this program\npop\t\t\tremove the last theorem\nclear\t\t\tclear all theorems\nlist [ruleId]\t\tList Proof steps\nrules\t\t\tList theorems & axioms\ntheorem\t\t\tCreate Theorem from current step\n[RULENAME]\t\tApply theorems/axioms\nhyp\t\t\tAdd hypothesis\nmv\t\t\tMove a proposition from ... to ...\nsave\t\t\tSave your theorems to proofs.json\nload\t\t\tLoad your theorems from proofs.json`,
 				);
 				continue;
+			}
+			if (command === 'testmdt') {
+				testRule();
 			}
 			if (command === 'exit') break;
 			if (command === 'rules') {
@@ -161,7 +159,20 @@ async function replQuestion() {
 				console.log('Moved successfully');
 				continue;
 			}
+			if (command.startsWith('m')) {
+				let find = formalSystem.metaRules.find((x) => x[1] == command);
+				if (find === undefined) {
+					console.error('Cannot find metarule ' + command);
+					continue;
+				}
 
+				const applyRule = await ask(`[${find[0]}]Rule: `);
+
+				find[2](applyRule);
+
+				console.log(`Applied. New rule is ${find[0]}${applyRule}`);
+				continue;
+			}
 			const rule = formalSystem.findRules(command);
 			const conditions = [];
 			const chosen_condition = [];

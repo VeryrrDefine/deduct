@@ -20,17 +20,21 @@ Save theorems: type `save`
 
 Load theorems: type `load`
 
+Test mdt metaRule: type `testmdt`
+
 ## Builtin axioms & definitions
 
 `mp, a1, a2, a3, d<>1, d<>2, d|, d&`
 
 ## Builtin Meta-Theorems
 
-`midt` (Use by `<`+Rule ), `c`
+- `midt` (Used by `<`+Rule)
+- `mcdt` (Used by `c`+Rule)
+- `mdt` (Used by `>`+Rule)
 
 ## TODO List:
 
-Meta Theorems `>, v`, `mcpt`
+Meta Theorems `v`, `mcpt`
 
 1st-Order Logic Proposition Parsing
 

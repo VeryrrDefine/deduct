@@ -385,20 +385,25 @@ export class FormalSystem {
 			else if (this.ruleExists(x.ruleString)) {
 				return this.findRules(x.ruleString);
 			} else {
-				if (x.metaRules.startsWith('<')) {
-					return this.metaInvDeductTheorem(x.ruleString.slice(1));
-				}
-				if (x.metaRules.startsWith('c')) {
-					return this.metaConditionTheorem(x.ruleString.slice(1));
-				}
-				if (x.metaRules.startsWith('>')) {
-					return this.metaDeductTheorem(x.ruleString.slice(1));
+				for (const entry of this.metaRules) {
+					if (x.metaRules.startsWith(entry[0])) {
+						return entry[2](x.ruleString.slice(1));
+					}
 				}
 				throw new Error(`Not supported: ${x.metaRules[0]}`);
 			}
 		}
 		return null;
 	}
+	metaRules: [
+		symbol: string,
+		metaRuleName: string,
+		function: (x: string) => FormalSystemRule | null,
+	][] = [
+		['<', 'midt', this.metaInvDeductTheorem.bind(this)],
+		['c', 'mcdt', this.metaConditionTheorem.bind(this)],
+		['>', 'mdt', this.metaDeductTheorem.bind(this)],
+	];
 	relatively(x: number) {
 		return x - this.steps.length;
 	}
