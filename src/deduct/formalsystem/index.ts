@@ -584,14 +584,24 @@ export class FormalSystem {
 					if (counter >= 1000) throw new Error('c');
 				}
 				// 检查该步骤是否依赖 s
-				const deeplyDependsOnS = cond.includes(conditionLength - 1); // 原假设索引 m-1 是 s
+				let deeplyDependsOnS = cond.includes(conditionLength - 1); // 原假设索引 m-1 是 s
 
 				const preChoice = step.chosen_condition.map((x) => {
 					if (x >= 0) return x;
-					if (isNaN(stepToPredIdx[www + x])) return NaN;
+					if (isNaN(stepToPredIdx[www + x])) {
+						console.log(
+							`The proposition of original ${www + x}th(0+) step is not exists.`,
+						);
+						if (deeplyDependsOnS) {
+							console.log('But it is safe.');
+						} else {
+							console.log('It is not safe!');
+							deeplyDependsOnS = true;
+						}
+						return NaN;
+					}
 					return this.relatively(stepToPredIdx[www + x]);
 				});
-
 				//
 				if (!deeplyDependsOnS) {
 					const expect2 = new ImplicationPropositionAST(lastHyp, step.proposition);
@@ -674,8 +684,8 @@ export class FormalSystem {
 			// 然而，result 可能不在 steps 中显式出现（如果是公理或 MP 直接得到）。所以我们需要特殊处理：
 			// 如果 d.steps 为空（原子规则），则 result 是直接由条件推导出的结论。此时我们需要将条件化应用到整个规则。
 			// 但你的 metaDeductTheorem 已经假设 d.steps 非空（宏规则），所以结论就是最后一个步骤的结论。
-			const finalSImpIdx = stepToCondIdx[stepToCondIdx.length - 1];
-			// 验证 finalSImpIdx 对应的命题确实是 s -> d.result
+			const finalSImp = this.steps[stepToCondIdx[stepToCondIdx.length - 1]];
+			// 验证 finalSImp 对应的命题确实是 s -> d.result
 			// 可以添加断言
 
 			const ther = this.toNewTheorem('>' + idx);
