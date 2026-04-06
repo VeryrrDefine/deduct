@@ -14,7 +14,7 @@ import { RuleParser } from '../parser/parserule-structure';
 import { LogicError, MatchError } from './errors';
 import { FormalSystemRule } from './fsRule';
 import { matchStrTableToTable, type MatchStrTable, type MatchTable } from './matchTable';
-import type { Step } from './step';
+import { printStep, type Step } from './step';
 
 export class FormalSystem {
 	static debugLog(...args: any[]) {
@@ -552,28 +552,75 @@ export class FormalSystem {
 			// s -> s 自身
 			const sImpSIdx = this.deduct('.i', { '0': lastHyp }, [])[1];
 			hypToCondIdx.push(sImpSIdx); // 索引 m-1 对应 s
-
+			const stepToPredIdx: {
+				[key: number]: number;
+			} = {};
 			// 3. 处理原规则的每个步骤，建立步骤映射
 			const stepToCondIdx: number[] = []; // 与原 steps 顺序一一对应
+			let www = -1;
 			for (const step of d.steps) {
+				www++;
+				let cond = step.chosen_condition;
+				let counter = 0;
+
+				while (!cond.every((x) => x >= 0) && cond.length !== 0) {
+					console.log('Pre', cond);
+					cond = cond
+						.map((x) => {
+							if (x >= 0) return x;
+							let qqq = d.steps[www + x];
+
+							return qqq.chosen_condition.map((y) => {
+								if (y >= 0) return y;
+								// 这里是相对于www+x的位置，而不是www，所以需要换成www的
+								let absPos = www + x + y + 1;
+								let relPos = www - absPos;
+								return relPos;
+							});
+						})
+						.flat();
+					counter++;
+					console.log('After', cond);
+					if (counter >= 1000) throw new Error('c');
+				}
 				// 检查该步骤是否依赖 s
-				const dependsOnS = step.chosen_condition.includes(conditionLength - 1); // 原假设索引 m-1 是 s
+				const deeplyDependsOnS = cond.includes(conditionLength - 1); // 原假设索引 m-1 是 s
 
-				if (!dependsOnS) {
+				const preChoice = step.chosen_condition.map((x) => {
+					if (x >= 0) return x;
+
+					return this.relatively(stepToPredIdx[www + x]);
+				});
+
+				//
+				if (!deeplyDependsOnS) {
 					// 不依赖 s: 先推导出原步骤结论 A，再生成 s -> A
+					// 需要注意前面某些结论可能会错位
+					try {
+						console.log('调试', cond);
+						console.log('Trying to deduct pre proposition...');
+						const aIdx = this.deduct(step.rule_id, step.match_map, preChoice)[1];
+						stepToPredIdx[www] = aIdx;
 
-					const aIdx = this.deduct(
-						step.rule_id,
-						step.match_map,
-						step.chosen_condition,
-					)[1];
-					const sImpAIdx = this.deduct('<a1', { '1': lastHyp }, [
-						this.relatively(aIdx),
-					])[1];
-					stepToCondIdx.push(sImpAIdx);
+						const sImpAIdx = this.deduct('<a1', { '1': lastHyp }, [
+							this.relatively(aIdx),
+						])[1];
+						stepToCondIdx[www] = sImpAIdx;
+					} catch (e) {
+						console.error(
+							`无法生成${lastHyp.displayFancy(1)} → ${step.proposition.displayFancy(1)}`,
+						);
+						for (let i = 0; i < www + 1; i++) {
+							printStep(d.steps[i]);
+						}
+						throw e;
+					}
+					console.log(
+						`生成成功${lastHyp.displayFancy(1)} → ${step.proposition.displayFancy(1)}`,
+					);
 				} else if (step.proposition.equals(lastHyp)) {
 					// 步骤结论就是 s 本身（例如从假设直接引用）
-					stepToCondIdx.push(hypToCondIdx[conditionLength - 1]); // 使用 s -> s
+					stepToCondIdx[www] = hypToCondIdx[conditionLength - 1]; // 使用 s -> s
 				} else {
 					// 依赖 s: 需要对子规则应用条件化
 					// 首先确保 c + step.rule_id 存在（若不存在则调用 metaConditionTheorem 生成）
@@ -586,21 +633,26 @@ export class FormalSystem {
 					const mappedConds = step.chosen_condition.map((origIdx) => {
 						if (origIdx >= 0) {
 							// 假设索引
+							// 找到hypToCondIdx的位置
 							if (origIdx >= hypToCondIdx.length)
 								throw new Error(`Invalid hyp index ${origIdx}`);
 							return t.relatively(hypToCondIdx[origIdx]);
 						} else {
 							// 步骤索引（相对）
-							const stepPos = -origIdx - 1;
+							// 找到原步骤的位置
+							const stepPos = www + origIdx;
 							if (stepPos >= stepToCondIdx.length)
 								throw new Error(`Invalid step ref ${origIdx}`);
+							console.log(
+								`Converted ${origIdx} to ${t.relatively(stepToCondIdx[stepPos])}`,
+							);
 							return t.relatively(stepToCondIdx[stepPos]);
 						}
 					});
 					// 有时候conditionedRule 会产生一个新自定义命题，例如c<a1原先产生的<a1时
 					console.log(conditionedRuleId, step.match_map);
 					const sImpTIdx = this.deduct(conditionedRuleId, step.match_map, mappedConds)[1];
-					stepToCondIdx.push(sImpTIdx);
+					stepToCondIdx[www] = sImpTIdx;
 				}
 			}
 

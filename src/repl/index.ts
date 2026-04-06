@@ -37,6 +37,32 @@ async function loadTheorems(filename: string = 'proofs.json') {
 	}
 	console.log('Loaded successfully');
 }
+await loadTheorems();
+formalSystem.genRule('>.t');
+// let rules_notpassed: string[] = [];
+// let total: number = 0;
+// for (const entry of formalSystem.listRules()) {
+// 	if (entry[1].condition.length >= 1) {
+// 		try {
+// 			total++;
+// 			let res = formalSystem.genRule('>' + entry[0])!;
+// 			console.log('>' + entry, '合格');
+// 			let entry2 = '>' + entry;
+// 			while (res.condition.length >= 1) {
+// 				total++;
+// 				res = formalSystem.genRule('>' + entry2)!;
+// 				console.log('>' + entry2, '合格');
+// 				entry2 = '>' + entry;
+// 			}
+// 		} catch (e) {
+// 			console.error('>' + entry, '不合格');
+// 			rules_notpassed.push('>' + entry);
+// 			console.error(e);
+// 		}
+// 	}
+// }
+
+// console.log(`共 ${total}, ${rules_notpassed.length} 不合格`, rules_notpassed);
 
 async function replQuestion() {
 	while (true) {
