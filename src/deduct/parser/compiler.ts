@@ -1,11 +1,15 @@
 import { FormalSystemRule } from '../formalsystem/fsRule';
 import {
 	AnyPropositionAST,
+	AnyTermAST,
 	ConjunctionPropositionAST,
 	DisjunctionPropositionAST,
+	ExistsPropositionAST,
+	ForallPropositionAST,
 	IffPropositionAST,
 	ImplicationPropositionAST,
 	LetterPropositionAST,
+	LetterTermAST,
 	NotPropositionAST,
 	Proposition,
 } from './ast';
@@ -91,6 +95,12 @@ class CstToAstVisitor extends parserInstance.getBaseCstVisitorConstructor() {
 		if (ctx.anyProposition) {
 			return this.visit(ctx.anyProposition);
 		}
+		if (ctx.forAllProposition) {
+			return this.visit(ctx.forAllProposition);
+		}
+		if (ctx.existsProposition) {
+			return this.visit(ctx.existsProposition);
+		}
 
 		return this.visit(ctx.proposition);
 	}
@@ -100,6 +110,27 @@ class CstToAstVisitor extends parserInstance.getBaseCstVisitorConstructor() {
 	}
 	anyProposition(ctx: any): any {
 		return new AnyPropositionAST(ctx.AnyProposition[0].image.slice(1));
+	}
+
+	letterVariable(ctx: any): any {
+		return new LetterTermAST(ctx.LetterProposition[0].image);
+	}
+	anyVariable(ctx: any): any {
+		return new AnyTermAST(ctx.AnyProposition[0].image.slice(1));
+	}
+	variableOnly(ctx: any): any {
+		if (ctx.letterVariable) return this.visit(ctx.letterVariable);
+		if (ctx.anyVariable) return this.visit(ctx.anyVariable);
+	}
+	term(ctx: any): any {
+		return this.visit(ctx.variableOnly);
+	}
+
+	forAllProposition(ctx: any): any {
+		return new ForallPropositionAST(this.visit(ctx.variableOnly), this.visit(ctx.proposition));
+	}
+	existsProposition(ctx: any): any {
+		return new ExistsPropositionAST(this.visit(ctx.variableOnly), this.visit(ctx.proposition));
 	}
 }
 

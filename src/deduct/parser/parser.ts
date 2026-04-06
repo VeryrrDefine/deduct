@@ -2,9 +2,12 @@ import { CstParser } from 'chevrotain';
 import {
 	allTokens,
 	AnyProposition,
+	Colon,
 	Comma,
 	Conjunction,
 	Disjunction,
+	Exists,
+	Forall,
 	LeftRightarrow,
 	LetterProposition,
 	LParen,
@@ -92,6 +95,12 @@ export class PropositionParser extends CstParser {
 			{ ALT: () => this.SUBRULE(this.letterProposition) },
 			{ ALT: () => this.SUBRULE(this.anyProposition) },
 			{
+				ALT: () => this.SUBRULE(this.forAllProposition),
+			},
+			{
+				ALT: () => this.SUBRULE(this.existsProposition),
+			},
+			{
 				ALT: () => {
 					this.CONSUME(LParen);
 					this.SUBRULE(this.proposition); // 括号内允许完整命题
@@ -105,6 +114,49 @@ export class PropositionParser extends CstParser {
 		this.CONSUME(LetterProposition);
 	});
 	public anyProposition = this.RULE('anyProposition', () => {
+		this.CONSUME(AnyProposition);
+	});
+
+	public forAllProposition = this.RULE('forAllProposition', () => {
+		this.CONSUME(Forall);
+		this.SUBRULE(this.variableOnly);
+		this.CONSUME(Colon);
+		this.SUBRULE(this.proposition);
+	});
+	public existsProposition = this.RULE('existsProposition', () => {
+		this.CONSUME(Exists);
+		this.SUBRULE(this.variableOnly);
+		this.CONSUME(Colon);
+		this.SUBRULE(this.proposition);
+	});
+
+	public term = this.RULE('term', () => {
+		this.OR([
+			{
+				ALT: () => {
+					this.SUBRULE(this.variableOnly);
+				},
+			},
+		]);
+	});
+	public variableOnly = this.RULE('variableOnly', () => {
+		this.OR([
+			{
+				ALT: () => {
+					this.SUBRULE(this.letterVariable);
+				},
+			},
+			{
+				ALT: () => {
+					this.SUBRULE(this.anyVariable);
+				},
+			},
+		]);
+	});
+	public letterVariable = this.RULE('letterVariable', () => {
+		this.CONSUME(LetterProposition);
+	});
+	public anyVariable = this.RULE('anyVariable', () => {
 		this.CONSUME(AnyProposition);
 	});
 }

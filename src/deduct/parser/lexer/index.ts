@@ -26,9 +26,10 @@ export const Comma = createToken({ name: 'Comma', pattern: /,/ });
 export const Disjunction = createToken({ name: 'Disjunction', pattern: /∨|\|/ });
 export const Conjunction = createToken({ name: 'Conjunction', pattern: /∧|&/ });
 export const Forall = createToken({ name: 'Forall', pattern: /V|∀/ });
-export const Exists = createToken({ name: 'Exists', pattern: /V|∃/ });
+export const Exists = createToken({ name: 'Exists', pattern: /E|∃/ });
 export const VDash = createToken({ name: 'VDash', pattern: /⊢|\|-/ });
 export const VDashDouble = createToken({ name: 'VDashDouble', pattern: /⊨|\|=/ });
+export const Colon = createToken({ name: 'colon', pattern: /:/ });
 const Whitespace = createToken({
 	name: 'Whitespace',
 	pattern: /\s+/,
@@ -48,6 +49,7 @@ export const allTokens = [
 	Rightarrow,
 	Not,
 	LParen,
+	Colon,
 	RParen,
 	Forall,
 	Exists,

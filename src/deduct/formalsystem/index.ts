@@ -30,6 +30,7 @@ export class FormalSystem {
 		a1: FormalSystemRule.fromString('|-$0>($1>$0)', 'a1'),
 		a2: FormalSystemRule.fromString('|-($0>($1>$2))>(($0>$1)>($0>$2))', 'a2'),
 		a3: FormalSystemRule.fromString('|-(~$0>~$1)>($1>$0)', 'a3'),
+		a5: FormalSystemRule.fromString('|-(V$0:($1>$2)) > ((V$0:$1) > (V$0:$2))', 'a5'),
 		'd<>1': FormalSystemRule.fromString('|-($0<>$1)>~(($0>$1)>~($1>$0))', 'd<>1'),
 		'd<>2': FormalSystemRule.fromString('|-~(($0>$1)>~($1>$0))>($0<>$1)', 'd<>2'),
 		'd|': FormalSystemRule.fromString('⊢($0|$1)<>(~$0>$1)', 'd|'),
