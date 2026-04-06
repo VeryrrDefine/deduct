@@ -602,9 +602,14 @@ export class FormalSystem {
 						const aIdx = this.deduct(step.rule_id, step.match_map, preChoice)[1];
 						stepToPredIdx[www] = aIdx;
 
-						const sImpAIdx = this.deduct('<a1', { '1': lastHyp }, [
+						const [prop2, sImpAIdx] = this.deduct('<a1', { '1': lastHyp }, [
 							this.relatively(aIdx),
-						])[1];
+						]);
+						// 验证是不是正确的
+						const expect2 = new ImplicationPropositionAST(lastHyp, step.proposition);
+						if (!prop2.equals(expect2)) {
+							throw `Assertion failed, Except ${expect2.displayFancy()}, actual ${prop2.displayFancy()}`;
+						}
 						stepToCondIdx[www] = sImpAIdx;
 					} catch (e) {
 						console.error(
