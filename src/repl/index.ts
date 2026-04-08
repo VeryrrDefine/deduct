@@ -159,10 +159,11 @@ async function replQuestion() {
 				console.log('Moved successfully');
 				continue;
 			}
-			if (command.startsWith('m')) {
-				let find = formalSystem.metaRules.find((x) => x[1] == command);
+			if (command == 'metarule') {
+				let c = await ask('Enter Metarule: ');
+				let find = formalSystem.metaRules.find((x) => x[1] == c);
 				if (find === undefined) {
-					console.error('Cannot find metarule ' + command);
+					console.error('Cannot find metarule ' + c);
 					continue;
 				}
 

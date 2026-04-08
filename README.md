@@ -20,6 +20,8 @@ Save theorems: type `save`
 
 Load theorems: type `load`
 
+Use Metarule: type `metarule`
+
 Test mdt metaRule: type `testmdt`
 
 ## Builtin axioms & definitions
