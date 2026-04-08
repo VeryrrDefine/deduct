@@ -21,22 +21,22 @@ import { printStep, type Step } from './step';
 export class FormalSystem {
 	static debugLog(...args: any[]) {
 		return;
-		return console.debug(...args);
+		// return console.debug(...args);
 	}
 	private rules: {
 		[key: string]: FormalSystemRule;
 	} = {
-		mp: FormalSystemRule.fromString('$0>$1, $0|-$1', 'mp'),
 		a1: FormalSystemRule.fromString('|-$0>($1>$0)', 'a1'),
 		a2: FormalSystemRule.fromString('|-($0>($1>$2))>(($0>$1)>($0>$2))', 'a2'),
 		a3: FormalSystemRule.fromString('|-(~$0>~$1)>($1>$0)', 'a3'),
-		a5: FormalSystemRule.fromString('|-(V$0:($1>$2)) > ((V$0:$1) > (V$0:$2))', 'a5'),
+		// a5: FormalSystemRule.fromString('|-(V$0:($1>$2)) > ((V$0:$1) > (V$0:$2))', 'a5'),
 		'd<>1': FormalSystemRule.fromString('|-($0<>$1)>~(($0>$1)>~($1>$0))', 'd<>1'),
 		'd<>2': FormalSystemRule.fromString('|-~(($0>$1)>~($1>$0))>($0<>$1)', 'd<>2'),
 		'd|': FormalSystemRule.fromString('⊢($0|$1)<>(~$0>$1)', 'd|'),
 		'd&': FormalSystemRule.fromString('⊢($0&$1)<>~($0>~$1)', 'd&'),
 		dtrue: FormalSystemRule.fromString('|-true', 'dtrue'),
 		dfalse: FormalSystemRule.fromString('|-false>~true', 'dfalse'),
+		mp: FormalSystemRule.fromString('$0>$1, $0|-$1', 'mp'),
 	};
 
 	hypothesis: Proposition[] = [];
@@ -99,15 +99,15 @@ export class FormalSystem {
 			}
 		}
 		const conditions = conditionIdxs.map((x) => this.getPropositionFromId(x));
-		console.log(
-			`Deduction: ${deductionIdx} ${conditionIdxs}, which they are ${conditions.map((x) => (x ? x.displayFancy() : '!!!')).join(', ')}, doing`,
-		);
+		// console.log(
+		// 	`Deduction: ${deductionIdx} ${conditionIdxs}, which they are ${conditions.map((x) => (x ? x.displayFancy() : '!!!')).join(', ')}, doing`,
+		// );
 		let result = rule
 			.applyRule(conditionIdxs, ...conditions)
 			.applyResultAndDeduct(repl as MatchTable | undefined, this);
-		console.log(
-			`Deduction: ${deductionIdx} ${conditionIdxs}, which they are ${conditions.map((x) => (x ? x.displayFancy() : '!!!')).join(', ')}, completed Successfully`,
-		);
+		// console.log(
+		// 	`Deduction: ${deductionIdx} ${conditionIdxs}, which they are ${conditions.map((x) => (x ? x.displayFancy() : '!!!')).join(', ')}, completed Successfully`,
+		// );
 		return [result, result.payload];
 	}
 
@@ -592,7 +592,6 @@ export class FormalSystem {
 				let counter = 0;
 
 				while (!cond.every((x) => x >= 0) && cond.length !== 0) {
-					console.log('Pre', cond);
 					cond = cond
 						.map((x) => {
 							if (x >= 0) return x;
@@ -608,7 +607,6 @@ export class FormalSystem {
 						})
 						.flat();
 					counter++;
-					console.log('After', cond);
 					if (counter >= 1000) throw new Error('c');
 				}
 				// 检查该步骤是否依赖 s
@@ -617,13 +615,8 @@ export class FormalSystem {
 				const preChoice = step.chosen_condition.map((x) => {
 					if (x >= 0) return x;
 					if (isNaN(stepToPredIdx[www + x])) {
-						console.log(
-							`The proposition of original ${www + x}th(0+) step is not exists.`,
-						);
 						if (deeplyDependsOnS) {
-							console.log('But it is safe.');
 						} else {
-							console.log('It is not safe!');
 							deeplyDependsOnS = true;
 						}
 						return NaN;
@@ -642,8 +635,6 @@ export class FormalSystem {
 					// 不依赖 s: 先推导出原步骤结论 A，再生成 s -> A
 					// 需要注意前面某些结论可能会错位
 					try {
-						console.log('调试', cond);
-						console.log('Trying to deduct pre proposition...', preChoice);
 						const aIdx = this.deduct(step.rule_id, step.match_map, preChoice)[1];
 						stepToPredIdx[www] = aIdx;
 
@@ -664,9 +655,6 @@ export class FormalSystem {
 						}
 						throw e;
 					}
-					console.log(
-						`生成成功${lastHyp.displayFancy(1)} → ${step.proposition.displayFancy(1)}`,
-					);
 				} else if (step.proposition.equals(lastHyp)) {
 					// 步骤结论就是 s 本身（例如从假设直接引用）
 					stepToCondIdx[www] = hypToCondIdx[conditionLength - 1]; // 使用 s -> s
@@ -692,14 +680,9 @@ export class FormalSystem {
 							const stepPos = www + origIdx;
 							if (stepPos >= stepToCondIdx.length)
 								throw new Error(`Invalid step ref ${origIdx}`);
-							console.log(
-								`Converted ${origIdx} to ${t.relatively(stepToCondIdx[stepPos])}`,
-							);
 							return t.relatively(stepToCondIdx[stepPos]);
 						}
 					});
-					// 有时候conditionedRule 会产生一个新自定义命题，例如c<a1原先产生的<a1时
-					console.log(conditionedRuleId, step.match_map);
 					const sImpTIdx = this.deduct(conditionedRuleId, step.match_map, mappedConds)[1];
 					stepToCondIdx[www] = sImpTIdx;
 				}
@@ -732,5 +715,3 @@ export class FormalSystem {
 		}
 	}
 }
-
-// console.log(RULES());

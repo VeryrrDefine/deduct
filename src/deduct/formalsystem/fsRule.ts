@@ -41,6 +41,7 @@ export class FormalSystemRule {
 			result = result.replaceAnyProposition(key, matchTable[key], true);
 		}
 		let w = [...new Set(result.findAnyProposition())];
+		// console.log('Checking', result, w);
 		return w;
 	}
 	static asTheorem(condition: Proposition[], result: Proposition, steps: Step[], name: string) {

@@ -2,14 +2,31 @@ export class Proposition {
 	toString() {
 		return '[bx]';
 	}
-	replaceAnyProposition(x: string, replaceTo: Proposition, ispreapply = false): Proposition {
-		return this;
+	replaceAnyProposition(x: string, replaceTo: Proposition, isNotPreApply = false): Proposition {
+		let new2 = new Proposition();
+		new2.propositions = this.propositions.map((t) => {
+			let res = t.replaceAnyProposition(x, replaceTo, isNotPreApply);
+			return res;
+		});
+		Object.setPrototypeOf(new2, Object.getPrototypeOf(this));
+
+		return new2;
 	}
 	clone() {
 		return new Proposition();
 	}
-	findAnyProposition(isPreApply = false): string[] {
-		return [];
+	findAnyProposition(isNotPreApply = false): string[] {
+		return (function (t) {
+			let t2 = t.propositions
+				.map((x) => {
+					let q = x.findAnyProposition(isNotPreApply);
+					if (x instanceof AnyPropositionPreApplyAST) {
+					}
+					return q;
+				})
+				.flat();
+			return t2;
+		})(this);
 	}
 	displayFancy(level?: number) {
 		return '';
@@ -19,8 +36,16 @@ export class Proposition {
 	 * Some extra informations of this proposition
 	 */
 	payload: any;
+
+	/**
+	 * propositions
+	 */
+	propositions: Proposition[] = [];
 	equals(x: Proposition) {
 		return this.toString() == x.toString();
+	}
+	constructor(x?: Proposition[]) {
+		this.propositions = x ?? [];
 	}
 }
 export class LetterPropositionAST extends Proposition {
@@ -35,11 +60,11 @@ export class LetterPropositionAST extends Proposition {
 	clone() {
 		return new LetterPropositionAST(this.name);
 	}
-	findAnyProposition(isPreApply = false): string[] {
-		return [];
-	}
 	displayFancy(level?: number): string {
 		return this.toString();
+	}
+	replaceAnyProposition(x: string, replaceTo: Proposition, isNotPreApply?: boolean): Proposition {
+		return this;
 	}
 }
 
@@ -52,8 +77,8 @@ export class AnyPropositionAST extends Proposition {
 	toString(): string {
 		return `($${this.name})`;
 	}
-	replaceAnyProposition(x: string, replaceTo: Proposition, ispreapply = false): Proposition {
-		if (!ispreapply) {
+	replaceAnyProposition(x: string, replaceTo: Proposition, isNotPreApply = false): Proposition {
+		if (!isNotPreApply) {
 			return new AnyPropositionPreApplyAST(this.name);
 		}
 		return this;
@@ -61,8 +86,8 @@ export class AnyPropositionAST extends Proposition {
 	clone() {
 		return new AnyPropositionAST(this.name);
 	}
-	findAnyProposition(isPreApply = false): string[] {
-		if (isPreApply) return [this.name];
+	findAnyProposition(isNotPreApply = false): string[] {
+		if (isNotPreApply) return [this.name];
 		return [];
 	}
 	displayFancy(level?: number): string {
@@ -79,15 +104,15 @@ export class AnyPropositionPreApplyAST extends Proposition {
 	toString(): string {
 		return `($${this.name}!)`;
 	}
-	replaceAnyProposition(x: string, replaceTo: Proposition, ispreapply = false): Proposition {
-		if (ispreapply && this.name == x) return replaceTo;
+	replaceAnyProposition(x: string, replaceTo: Proposition, isNotPreApply = false): Proposition {
+		if (isNotPreApply && this.name == x) return replaceTo;
 		return this;
 	}
 	clone() {
 		return new AnyPropositionPreApplyAST(this.name);
 	}
-	findAnyProposition(isPreApply = false): string[] {
-		if (!isPreApply) return [this.name];
+	findAnyProposition(isNotPreApply = false): string[] {
+		if (!isNotPreApply) return [this.name];
 		return [];
 	}
 	displayFancy(level?: number): string {
@@ -96,30 +121,22 @@ export class AnyPropositionPreApplyAST extends Proposition {
 }
 
 export class ImplicationPropositionAST extends Proposition {
-	left: Proposition;
-	right: Proposition;
+	get left() {
+		return this.propositions[0];
+	}
+	get right() {
+		return this.propositions[1];
+	}
 	constructor(left: Proposition, right: Proposition) {
-		super();
-		this.left = left;
-		this.right = right;
+		super([left, right]);
 	}
 	toString(): string {
 		return `((${this.left.toString()})→(${this.right.toString()}))`;
 	}
-	replaceAnyProposition(x: string, replaceTo: Proposition, ispreapply = false): Proposition {
-		return new ImplicationPropositionAST(
-			this.left.replaceAnyProposition(x, replaceTo, ispreapply),
-			this.right.replaceAnyProposition(x, replaceTo, ispreapply),
-		);
-	}
 	clone() {
 		return new ImplicationPropositionAST(this.left.clone(), this.right.clone());
 	}
-	findAnyProposition(isPreApply = false): string[] {
-		return this.left
-			.findAnyProposition(isPreApply)
-			.concat(this.right.findAnyProposition(isPreApply));
-	}
+
 	displayFancy(level?: number): string {
 		if (level == 1) {
 			return `(${this.left.displayFancy(1)} → ${this.right.displayFancy(1)})`;
@@ -129,29 +146,21 @@ export class ImplicationPropositionAST extends Proposition {
 }
 
 export class IffPropositionAST extends Proposition {
-	left: Proposition;
-	right: Proposition;
+	get left() {
+		return this.propositions[0];
+	}
+	get right() {
+		return this.propositions[1];
+	}
 	constructor(left: Proposition, right: Proposition) {
-		super();
-		this.left = left;
-		this.right = right;
+		super([left, right]);
 	}
 	toString(): string {
 		return `((${this.left.toString()})↔(${this.right.toString()}))`;
 	}
-	replaceAnyProposition(x: string, replaceTo: Proposition, ispreapply = false): Proposition {
-		return new IffPropositionAST(
-			this.left.replaceAnyProposition(x, replaceTo, ispreapply),
-			this.right.replaceAnyProposition(x, replaceTo, ispreapply),
-		);
-	}
+
 	clone() {
 		return new IffPropositionAST(this.left.clone(), this.right.clone());
-	}
-	findAnyProposition(isPreApply = false): string[] {
-		return this.left
-			.findAnyProposition(isPreApply)
-			.concat(this.right.findAnyProposition(isPreApply));
 	}
 	displayFancy(level?: number): string {
 		if (level == 1) {
@@ -162,22 +171,17 @@ export class IffPropositionAST extends Proposition {
 }
 
 export class NotPropositionAST extends Proposition {
-	prop: Proposition;
+	get prop() {
+		return this.propositions[0];
+	}
 	constructor(prop: Proposition) {
-		super();
-		this.prop = prop;
+		super([prop]);
 	}
 	toString(): string {
 		return `(¬(${this.prop}))`;
 	}
-	replaceAnyProposition(x: string, replaceTo: Proposition, ispreapply = false): Proposition {
-		return new NotPropositionAST(this.prop.replaceAnyProposition(x, replaceTo, ispreapply));
-	}
 	clone() {
 		return new NotPropositionAST(this.prop.clone());
-	}
-	findAnyProposition(isPreApply = false): string[] {
-		return this.prop.findAnyProposition(isPreApply);
 	}
 	displayFancy(level?: number): string {
 		return `¬${this.prop.displayFancy(1)}`;
@@ -185,29 +189,20 @@ export class NotPropositionAST extends Proposition {
 }
 
 export class DisjunctionPropositionAST extends Proposition {
-	left: Proposition;
-	right: Proposition;
+	get left() {
+		return this.propositions[0];
+	}
+	get right() {
+		return this.propositions[1];
+	}
 	constructor(left: Proposition, right: Proposition) {
-		super();
-		this.left = left;
-		this.right = right;
+		super([left, right]);
 	}
 	toString(): string {
 		return `((${this.left.toString()})∨(${this.right.toString()}))`;
 	}
-	replaceAnyProposition(x: string, replaceTo: Proposition, ispreapply = false): Proposition {
-		return new DisjunctionPropositionAST(
-			this.left.replaceAnyProposition(x, replaceTo, ispreapply),
-			this.right.replaceAnyProposition(x, replaceTo, ispreapply),
-		);
-	}
 	clone() {
 		return new DisjunctionPropositionAST(this.left.clone(), this.right.clone());
-	}
-	findAnyProposition(isPreApply = false): string[] {
-		return this.left
-			.findAnyProposition(isPreApply)
-			.concat(this.right.findAnyProposition(isPreApply));
 	}
 	displayFancy(level?: number): string {
 		if (level == 1) {
@@ -218,29 +213,20 @@ export class DisjunctionPropositionAST extends Proposition {
 }
 
 export class ConjunctionPropositionAST extends Proposition {
-	left: Proposition;
-	right: Proposition;
+	get left() {
+		return this.propositions[0];
+	}
+	get right() {
+		return this.propositions[1];
+	}
 	constructor(left: Proposition, right: Proposition) {
-		super();
-		this.left = left;
-		this.right = right;
+		super([left, right]);
 	}
 	toString(): string {
 		return `((${this.left.toString()})∧(${this.right.toString()}))`;
 	}
-	replaceAnyProposition(x: string, replaceTo: Proposition, ispreapply = false): Proposition {
-		return new ConjunctionPropositionAST(
-			this.left.replaceAnyProposition(x, replaceTo, ispreapply),
-			this.right.replaceAnyProposition(x, replaceTo, ispreapply),
-		);
-	}
 	clone() {
 		return new ConjunctionPropositionAST(this.left.clone(), this.right.clone());
-	}
-	findAnyProposition(isPreApply = false): string[] {
-		return this.left
-			.findAnyProposition(isPreApply)
-			.concat(this.right.findAnyProposition(isPreApply));
 	}
 	displayFancy(level?: number): string {
 		if (level == 1) {
@@ -252,26 +238,18 @@ export class ConjunctionPropositionAST extends Proposition {
 
 export class ExistsPropositionAST extends Proposition {
 	variable: AnyTermAST | LetterTermAST;
-	proposition: Proposition;
+	get proposition() {
+		return this.propositions[0];
+	}
 	constructor(variable: AnyTermAST | LetterTermAST, proposition: Proposition) {
-		super();
+		super([proposition]);
 		this.variable = variable;
-		this.proposition = proposition;
 	}
 	toString(): string {
 		return `(E${this.variable}:(${this.proposition}))`;
 	}
-	replaceAnyProposition(x: string, replaceTo: Proposition, ispreapply = false): Proposition {
-		return new ExistsPropositionAST(
-			this.variable,
-			this.proposition.replaceAnyProposition(x, replaceTo, ispreapply),
-		);
-	}
 	clone() {
 		return new ExistsPropositionAST(this.variable, this.proposition);
-	}
-	findAnyProposition(isPreApply = false): string[] {
-		return this.proposition.findAnyProposition(isPreApply);
 	}
 	displayFancy(level?: number): string {
 		if (level == 1) {
@@ -283,26 +261,18 @@ export class ExistsPropositionAST extends Proposition {
 
 export class ForallPropositionAST extends Proposition {
 	variable: AnyTermAST | LetterTermAST;
-	proposition: Proposition;
+	get proposition() {
+		return this.propositions[0];
+	}
 	constructor(variable: AnyTermAST | LetterTermAST, proposition: Proposition) {
-		super();
+		super([proposition]);
 		this.variable = variable;
-		this.proposition = proposition;
 	}
 	toString(): string {
 		return `(V${this.variable}:(${this.proposition}))`;
 	}
-	replaceAnyProposition(x: string, replaceTo: Proposition, ispreapply = false): Proposition {
-		return new ForallPropositionAST(
-			this.variable,
-			this.proposition.replaceAnyProposition(x, replaceTo, ispreapply),
-		);
-	}
 	clone() {
 		return new ForallPropositionAST(this.variable, this.proposition);
-	}
-	findAnyProposition(isPreApply = false): string[] {
-		return this.proposition.findAnyProposition(isPreApply);
 	}
 	displayFancy(level?: number): string {
 		if (level == 1) {
@@ -316,13 +286,13 @@ export class Term {
 	toString() {
 		return 'var[bx]';
 	}
-	replaceAnyTerm(x: string, replaceTo: Term, ispreapply = false): Term {
+	replaceAnyTerm(x: string, replaceTo: Term, isNotPreApply = false): Term {
 		return this;
 	}
 	clone() {
 		return new Term();
 	}
-	findAnyTerm(isPreApply = false): string[] {
+	findAnyTerm(isNotPreApply = false): string[] {
 		return [];
 	}
 	displayFancy(level?: number) {
@@ -349,7 +319,7 @@ export class LetterTermAST extends Term {
 	clone() {
 		return new LetterTermAST(this.name);
 	}
-	findAnyTerm(isPreApply = false): string[] {
+	findAnyTerm(isNotPreApply = false): string[] {
 		return [];
 	}
 	displayFancy(level?: number): string {
@@ -366,8 +336,8 @@ export class AnyTermAST extends Term {
 	toString(): string {
 		return `($${this.name})`;
 	}
-	replaceAnyTerm(x: string, replaceTo: Term, ispreapply = false): Term {
-		if (!ispreapply) {
+	replaceAnyTerm(x: string, replaceTo: Term, isNotPreApply = false): Term {
+		if (!isNotPreApply) {
 			return new AnyTermPreApplyAST(this.name);
 		}
 		return this;
@@ -375,8 +345,8 @@ export class AnyTermAST extends Term {
 	clone() {
 		return new AnyTermAST(this.name);
 	}
-	findAnyTerm(isPreApply = false): string[] {
-		if (isPreApply) return [this.name];
+	findAnyTerm(isNotPreApply = false): string[] {
+		if (isNotPreApply) return [this.name];
 		return [];
 	}
 	displayFancy(level?: number): string {
@@ -393,15 +363,15 @@ export class AnyTermPreApplyAST extends Term {
 	toString(): string {
 		return `($${this.name}!)`;
 	}
-	replaceAnyTerm(x: string, replaceTo: Term, ispreapply = false): Term {
-		if (ispreapply && this.name == x) return replaceTo;
+	replaceAnyTerm(x: string, replaceTo: Term, isNotPreApply = false): Term {
+		if (isNotPreApply && this.name == x) return replaceTo;
 		return this;
 	}
 	clone() {
 		return new AnyTermPreApplyAST(this.name);
 	}
-	findAnyTerm(isPreApply = false): string[] {
-		if (!isPreApply) return [this.name];
+	findAnyTerm(isNotPreApply = false): string[] {
+		if (!isNotPreApply) return [this.name];
 		return [];
 	}
 	displayFancy(level?: number): string {
