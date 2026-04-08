@@ -2422,5 +2422,296 @@
         "proposition": "((((($0))∨(($1))))→(($2)))"
       }
     ]
+  },
+  ".<>&": {
+    "condition": [],
+    "result": "((((($0))↔(($1))))↔(((((($0))→(($1))))∧(((($1))→(($0)))))))",
+    "steps": [
+      {
+        "rule_id": ".<>1",
+        "chosen_condition": [],
+        "match_map": {
+          "0": "($0)",
+          "1": "($1)"
+        },
+        "proposition": "((((($0))↔(($1))))→(((($0))→(($1)))))"
+      },
+      {
+        "rule_id": ".<>2",
+        "chosen_condition": [],
+        "match_map": {
+          "0": "($0)",
+          "1": "($1)"
+        },
+        "proposition": "((((($0))↔(($1))))→(((($1))→(($0)))))"
+      },
+      {
+        "rule_id": "c.&",
+        "chosen_condition": [
+          -2,
+          -1
+        ],
+        "match_map": {},
+        "proposition": "((((($0))↔(($1))))→(((((($0))→(($1))))∧(((($1))→(($0)))))))"
+      },
+      {
+        "rule_id": ">>.<>",
+        "chosen_condition": [],
+        "match_map": {
+          "0": "($0)",
+          "1": "($1)"
+        },
+        "proposition": "((((($0))→(($1))))→(((((($1))→(($0))))→(((($0))↔(($1)))))))"
+      },
+      {
+        "rule_id": ".&m2",
+        "chosen_condition": [
+          -1
+        ],
+        "match_map": {},
+        "proposition": "((((((($0))→(($1))))∧(((($1))→(($0))))))→(((($0))↔(($1)))))"
+      },
+      {
+        "rule_id": ".<>",
+        "chosen_condition": [
+          -3,
+          -1
+        ],
+        "match_map": {},
+        "proposition": "((((($0))↔(($1))))↔(((((($0))→(($1))))∧(((($1))→(($0)))))))"
+      }
+    ]
+  },
+  ".<>TT": {
+    "condition": [
+      "($0)",
+      "($1)"
+    ],
+    "result": "((($0))↔(($1)))",
+    "steps": [
+      {
+        "rule_id": "<a1",
+        "chosen_condition": [
+          1
+        ],
+        "match_map": {
+          "1": "($0)"
+        },
+        "proposition": "((($0))→(($1)))"
+      },
+      {
+        "rule_id": "<a1",
+        "chosen_condition": [
+          0
+        ],
+        "match_map": {
+          "1": "($1)"
+        },
+        "proposition": "((($1))→(($0)))"
+      },
+      {
+        "rule_id": ".<>",
+        "chosen_condition": [
+          -2,
+          -1
+        ],
+        "match_map": {},
+        "proposition": "((($0))↔(($1)))"
+      }
+    ]
+  },
+  ".<>FF": {
+    "condition": [
+      "(¬(($0)))",
+      "(¬(($1)))"
+    ],
+    "result": "((($0))↔(($1)))",
+    "steps": [
+      {
+        "rule_id": "<a1",
+        "chosen_condition": [
+          1
+        ],
+        "match_map": {
+          "1": "(¬(($0)))"
+        },
+        "proposition": "(((¬(($0))))→((¬(($1)))))"
+      },
+      {
+        "rule_id": "<a1",
+        "chosen_condition": [
+          0
+        ],
+        "match_map": {
+          "1": "(¬(($1)))"
+        },
+        "proposition": "(((¬(($1))))→((¬(($0)))))"
+      },
+      {
+        "rule_id": "<a3",
+        "chosen_condition": [
+          -2
+        ],
+        "match_map": {},
+        "proposition": "((($1))→(($0)))"
+      },
+      {
+        "rule_id": "<a3",
+        "chosen_condition": [
+          -2
+        ],
+        "match_map": {},
+        "proposition": "((($0))→(($1)))"
+      },
+      {
+        "rule_id": ".<>",
+        "chosen_condition": [
+          -1,
+          -2
+        ],
+        "match_map": {},
+        "proposition": "((($0))↔(($1)))"
+      }
+    ]
+  },
+  ".<>TF": {
+    "condition": [
+      "($0)",
+      "(¬(($1)))"
+    ],
+    "result": "(¬(((($0))↔(($1)))))",
+    "steps": [
+      {
+        "rule_id": ".>TF",
+        "chosen_condition": [
+          0,
+          1
+        ],
+        "match_map": {},
+        "proposition": "(¬(((($0))→(($1)))))"
+      },
+      {
+        "rule_id": "d<>1",
+        "chosen_condition": [],
+        "match_map": {
+          "0": "($0)",
+          "1": "($1)"
+        },
+        "proposition": "((((($0))↔(($1))))→((¬(((((($0))→(($1))))→((¬(((($1))→(($0)))))))))))"
+      },
+      {
+        "rule_id": ".ne",
+        "chosen_condition": [],
+        "match_map": {
+          "0": "((($0))↔(($1)))"
+        },
+        "proposition": "(((¬((¬(((($0))↔(($1))))))))→(((($0))↔(($1)))))"
+      },
+      {
+        "rule_id": ".t",
+        "chosen_condition": [
+          -1,
+          -2
+        ],
+        "match_map": {},
+        "proposition": "(((¬((¬(((($0))↔(($1))))))))→((¬(((((($0))→(($1))))→((¬(((($1))→(($0)))))))))))"
+      },
+      {
+        "rule_id": "<a3",
+        "chosen_condition": [
+          -1
+        ],
+        "match_map": {},
+        "proposition": "((((((($0))→(($1))))→((¬(((($1))→(($0))))))))→((¬(((($0))↔(($1)))))))"
+      },
+      {
+        "rule_id": "<a1",
+        "chosen_condition": [
+          -5
+        ],
+        "match_map": {
+          "1": "((($1))→(($0)))"
+        },
+        "proposition": "((((($1))→(($0))))→((¬(((($0))→(($1)))))))"
+      },
+      {
+        "rule_id": ".ne",
+        "chosen_condition": [],
+        "match_map": {
+          "0": "((($1))→(($0)))"
+        },
+        "proposition": "(((¬((¬(((($1))→(($0))))))))→(((($1))→(($0)))))"
+      },
+      {
+        "rule_id": ".t",
+        "chosen_condition": [
+          -1,
+          -2
+        ],
+        "match_map": {},
+        "proposition": "(((¬((¬(((($1))→(($0))))))))→((¬(((($0))→(($1)))))))"
+      },
+      {
+        "rule_id": "<a3",
+        "chosen_condition": [
+          -1
+        ],
+        "match_map": {},
+        "proposition": "((((($0))→(($1))))→((¬(((($1))→(($0)))))))"
+      },
+      {
+        "rule_id": "mp",
+        "chosen_condition": [
+          -5,
+          -1
+        ],
+        "match_map": {},
+        "proposition": "(¬(((($0))↔(($1)))))"
+      }
+    ]
+  },
+  ".<>FT": {
+    "condition": [
+      "(¬(($0)))",
+      "($1)"
+    ],
+    "result": "(¬(((($0))↔(($1)))))",
+    "steps": [
+      {
+        "rule_id": ".<>TF",
+        "chosen_condition": [
+          1,
+          0
+        ],
+        "match_map": {},
+        "proposition": "(¬(((($1))↔(($0)))))"
+      },
+      {
+        "rule_id": ">.<>s",
+        "chosen_condition": [],
+        "match_map": {
+          "0": "($0)",
+          "1": "($1)"
+        },
+        "proposition": "((((($0))↔(($1))))→(((($1))↔(($0)))))"
+      },
+      {
+        "rule_id": "<.a30",
+        "chosen_condition": [
+          -1
+        ],
+        "match_map": {},
+        "proposition": "(((¬(((($1))↔(($0))))))→((¬(((($0))↔(($1)))))))"
+      },
+      {
+        "rule_id": "mp",
+        "chosen_condition": [
+          -1,
+          -3
+        ],
+        "match_map": {},
+        "proposition": "(¬(((($0))↔(($1)))))"
+      }
+    ]
   }
 }
