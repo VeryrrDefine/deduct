@@ -1,12 +1,9 @@
 import readline from 'node:readline';
 import { toProposition } from '../deduct/parser/compiler';
-import { FormalSystemRule, type RuleResult, type TheoremJSON } from '../deduct/formalsystem/fsRule';
+import { type TheoremJSON } from '../deduct/formalsystem/fsRule';
 import type { MatchStrTable, MatchTable } from '../deduct/formalsystem/matchTable';
-import type { Step } from '../deduct/formalsystem/step';
 import { TheoremJSONHandler } from '../deduct/formalsystem/theorem-json-handler';
 import fs from 'node:fs/promises';
-import { LogicError } from '../deduct/formalsystem/errors';
-import type { Proposition } from '../deduct/parser/ast';
 import { FormalSystem } from '../deduct/formalsystem';
 const rl = readline.createInterface({
 	input: process.stdin,

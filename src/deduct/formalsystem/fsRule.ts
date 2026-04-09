@@ -4,6 +4,7 @@ import { LogicError } from './errors';
 import { matchTableToStrTable, type MatchStrTable, type MatchTable } from './matchTable';
 import { toRule } from '../parser/compiler';
 import type { Step, StepJSON } from './step';
+import { ASCII_MODE } from '../../env';
 
 export type TheoremJSON = {
 	condition: string[];
@@ -77,7 +78,7 @@ export class FormalSystemRule {
 	}
 	toString() {
 		let result = this.condition.map((x) => x.toString()).join(',');
-		result += '⊢';
+		result += ASCII_MODE ? '|-' : '⊢';
 		result += this.result.toString();
 
 		return result;
@@ -87,7 +88,7 @@ export class FormalSystemRule {
 		if (result !== '') {
 			result += ' ';
 		}
-		result += '⊢ ';
+		result += ASCII_MODE ? '|- ' : '⊢ ';
 		result += this.result.displayFancy();
 
 		return result;

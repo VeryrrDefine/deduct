@@ -1,3 +1,23 @@
+import { ASCII_MODE } from '../../../env';
+
+const symbols_A = {
+	impl: '→',
+	iff: '↔',
+	not: '¬',
+	disj: '∨',
+	conj: '∧',
+};
+const symbols_B = {
+	impl: '>',
+	iff: '<>',
+	not: '~',
+	disj: '|',
+	conj: '&',
+};
+
+function readSymbol(x: keyof typeof symbols_A | keyof typeof symbols_B) {
+	return ASCII_MODE ? symbols_B[x] : symbols_A[x];
+}
 export class Proposition {
 	toString() {
 		return '[bx]';
@@ -131,7 +151,7 @@ export class ImplicationPropositionAST extends Proposition {
 		super([left, right]);
 	}
 	toString(): string {
-		return `((${this.left.toString()})→(${this.right.toString()}))`;
+		return `((${this.left.toString()})${readSymbol('impl')}(${this.right.toString()}))`;
 	}
 	clone() {
 		return new ImplicationPropositionAST(this.left.clone(), this.right.clone());
@@ -139,9 +159,9 @@ export class ImplicationPropositionAST extends Proposition {
 
 	displayFancy(level?: number): string {
 		if (level == 1) {
-			return `(${this.left.displayFancy(1)} → ${this.right.displayFancy(1)})`;
+			return `(${this.left.displayFancy(1)} ${readSymbol('impl')} ${this.right.displayFancy(1)})`;
 		}
-		return `${this.left.displayFancy(1)} → ${this.right.displayFancy(1)}`;
+		return `${this.left.displayFancy(1)} ${readSymbol('impl')} ${this.right.displayFancy(1)}`;
 	}
 }
 
@@ -156,7 +176,7 @@ export class IffPropositionAST extends Proposition {
 		super([left, right]);
 	}
 	toString(): string {
-		return `((${this.left.toString()})↔(${this.right.toString()}))`;
+		return `((${this.left.toString()})${readSymbol('iff')}(${this.right.toString()}))`;
 	}
 
 	clone() {
@@ -164,9 +184,9 @@ export class IffPropositionAST extends Proposition {
 	}
 	displayFancy(level?: number): string {
 		if (level == 1) {
-			return `(${this.left.displayFancy(1)} ↔ ${this.right.displayFancy(1)})`;
+			return `(${this.left.displayFancy(1)} ${readSymbol('iff')} ${this.right.displayFancy(1)})`;
 		}
-		return `${this.left.displayFancy(1)} ↔ ${this.right.displayFancy(1)}`;
+		return `${this.left.displayFancy(1)} ${readSymbol('iff')} ${this.right.displayFancy(1)}`;
 	}
 }
 
@@ -178,13 +198,13 @@ export class NotPropositionAST extends Proposition {
 		super([prop]);
 	}
 	toString(): string {
-		return `(¬(${this.prop}))`;
+		return `(${readSymbol('not')}(${this.prop}))`;
 	}
 	clone() {
 		return new NotPropositionAST(this.prop.clone());
 	}
 	displayFancy(level?: number): string {
-		return `¬${this.prop.displayFancy(1)}`;
+		return `${readSymbol('not')}${this.prop.displayFancy(1)}`;
 	}
 }
 
@@ -199,16 +219,16 @@ export class DisjunctionPropositionAST extends Proposition {
 		super([left, right]);
 	}
 	toString(): string {
-		return `((${this.left.toString()})∨(${this.right.toString()}))`;
+		return `((${this.left.toString()})${readSymbol('disj')}(${this.right.toString()}))`;
 	}
 	clone() {
 		return new DisjunctionPropositionAST(this.left.clone(), this.right.clone());
 	}
 	displayFancy(level?: number): string {
 		if (level == 1) {
-			return `(${this.left.displayFancy(1)} ∨ ${this.right.displayFancy(1)})`;
+			return `(${this.left.displayFancy(1)} ${readSymbol('disj')} ${this.right.displayFancy(1)})`;
 		}
-		return `${this.left.displayFancy(1)} ∨ ${this.right.displayFancy(1)}`;
+		return `${this.left.displayFancy(1)} ${readSymbol('disj')} ${this.right.displayFancy(1)}`;
 	}
 }
 
@@ -223,16 +243,16 @@ export class ConjunctionPropositionAST extends Proposition {
 		super([left, right]);
 	}
 	toString(): string {
-		return `((${this.left.toString()})∧(${this.right.toString()}))`;
+		return `((${this.left.toString()})${readSymbol('conj')}(${this.right.toString()}))`;
 	}
 	clone() {
 		return new ConjunctionPropositionAST(this.left.clone(), this.right.clone());
 	}
 	displayFancy(level?: number): string {
 		if (level == 1) {
-			return `(${this.left.displayFancy(1)} ∧ ${this.right.displayFancy(1)})`;
+			return `(${this.left.displayFancy(1)} ${readSymbol('conj')} ${this.right.displayFancy(1)})`;
 		}
-		return `${this.left.displayFancy(1)} ∧ ${this.right.displayFancy(1)}`;
+		return `${this.left.displayFancy(1)} ${readSymbol('conj')} ${this.right.displayFancy(1)}`;
 	}
 }
 
