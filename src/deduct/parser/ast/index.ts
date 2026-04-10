@@ -18,10 +18,27 @@ const symbols_B = {
 function readSymbol(x: keyof typeof symbols_A | keyof typeof symbols_B) {
 	return ASCII_MODE ? symbols_B[x] : symbols_A[x];
 }
+export enum ASTTypes {
+	/**
+	 * Symbols, e.g. ~, <>, >, etc.
+	 */
+	SYM = 'sym',
+	/**
+	 * Replaceables, includes Letter, Anyproposition.
+	 * e.g. a, $bxd, #0, etc.
+	 */
+	REPLVAR = 'replvar',
+	/**
+	 * Functions.
+	 */
+	FN = 'fn',
+	UNKNOWN = 'unknown',
+}
 export class AST {
 	equals(x: AST) {
 		return false;
 	}
+	type: ASTTypes = ASTTypes.UNKNOWN;
 }
 export class Proposition extends AST {
 	toString() {
@@ -92,6 +109,7 @@ export class LetterPropositionAST extends Proposition {
 	replaceAnyProposition(x: string, replaceTo: Proposition, isNotPreApply?: boolean): Proposition {
 		return this;
 	}
+	type: ASTTypes = ASTTypes.REPLVAR;
 }
 
 export class AnyPropositionAST extends Proposition {
@@ -119,6 +137,7 @@ export class AnyPropositionAST extends Proposition {
 	displayFancy(level?: number): string {
 		return '$' + this.name;
 	}
+	type: ASTTypes = ASTTypes.REPLVAR;
 }
 
 export class AnyPropositionPreApplyAST extends Proposition {
@@ -144,6 +163,7 @@ export class AnyPropositionPreApplyAST extends Proposition {
 	displayFancy(level?: number): string {
 		return '$' + this.name + '!';
 	}
+	type: ASTTypes = ASTTypes.REPLVAR;
 }
 
 export class ImplicationPropositionAST extends Proposition {
@@ -169,6 +189,7 @@ export class ImplicationPropositionAST extends Proposition {
 		}
 		return `${this.left.displayFancy(1)} ${readSymbol('impl')} ${this.right.displayFancy(1)}`;
 	}
+	type: ASTTypes = ASTTypes.SYM;
 }
 
 export class IffPropositionAST extends Proposition {
@@ -194,6 +215,7 @@ export class IffPropositionAST extends Proposition {
 		}
 		return `${this.left.displayFancy(1)} ${readSymbol('iff')} ${this.right.displayFancy(1)}`;
 	}
+	type: ASTTypes = ASTTypes.SYM;
 }
 
 export class NotPropositionAST extends Proposition {
@@ -212,6 +234,7 @@ export class NotPropositionAST extends Proposition {
 	displayFancy(level?: number): string {
 		return `${readSymbol('not')}${this.prop.displayFancy(1)}`;
 	}
+	type: ASTTypes = ASTTypes.SYM;
 }
 
 export class DisjunctionPropositionAST extends Proposition {
@@ -236,6 +259,7 @@ export class DisjunctionPropositionAST extends Proposition {
 		}
 		return `${this.left.displayFancy(1)} ${readSymbol('disj')} ${this.right.displayFancy(1)}`;
 	}
+	type: ASTTypes = ASTTypes.SYM;
 }
 
 export class ConjunctionPropositionAST extends Proposition {
@@ -260,6 +284,7 @@ export class ConjunctionPropositionAST extends Proposition {
 		}
 		return `${this.left.displayFancy(1)} ${readSymbol('conj')} ${this.right.displayFancy(1)}`;
 	}
+	type: ASTTypes = ASTTypes.SYM;
 }
 
 export class ExistsPropositionAST extends Proposition {
@@ -283,6 +308,7 @@ export class ExistsPropositionAST extends Proposition {
 		}
 		return `∃${this.variable.toString()}:${this.proposition.displayFancy(1)}`;
 	}
+	type: ASTTypes = ASTTypes.SYM;
 }
 
 export class ForallPropositionAST extends Proposition {
@@ -306,6 +332,7 @@ export class ForallPropositionAST extends Proposition {
 		}
 		return `∀${this.variable.toString()}:${this.proposition.displayFancy(1)}`;
 	}
+	type: ASTTypes = ASTTypes.SYM;
 }
 
 export class Term {
@@ -351,6 +378,7 @@ export class LetterTermAST extends Term {
 	displayFancy(level?: number): string {
 		return this.toString();
 	}
+	type: ASTTypes = ASTTypes.REPLVAR;
 }
 
 export class AnyTermAST extends Term {
@@ -378,6 +406,7 @@ export class AnyTermAST extends Term {
 	displayFancy(level?: number): string {
 		return '$' + this.name;
 	}
+	type: ASTTypes = ASTTypes.REPLVAR;
 }
 
 export class AnyTermPreApplyAST extends Term {
@@ -403,4 +432,5 @@ export class AnyTermPreApplyAST extends Term {
 	displayFancy(level?: number): string {
 		return '$' + this.name + '!';
 	}
+	type: ASTTypes = ASTTypes.REPLVAR;
 }
