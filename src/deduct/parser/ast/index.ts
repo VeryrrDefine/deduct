@@ -18,7 +18,12 @@ const symbols_B = {
 function readSymbol(x: keyof typeof symbols_A | keyof typeof symbols_B) {
 	return ASCII_MODE ? symbols_B[x] : symbols_A[x];
 }
-export class Proposition {
+export class AST {
+	equals(x: AST) {
+		return false;
+	}
+}
+export class Proposition extends AST {
 	toString() {
 		return '[bx]';
 	}
@@ -65,6 +70,7 @@ export class Proposition {
 		return this.toString() == x.toString();
 	}
 	constructor(x?: Proposition[]) {
+		super();
 		this.propositions = x ?? [];
 	}
 }
