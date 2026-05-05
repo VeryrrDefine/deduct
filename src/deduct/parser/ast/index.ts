@@ -83,6 +83,11 @@ export class Proposition extends AST {
 	 * propositions
 	 */
 	propositions: Proposition[] = [];
+	/**
+	 * variables
+	 */
+	variables: Term[] = [];
+
 	equals(x: Proposition) {
 		return this.toString() == x.toString();
 	}
@@ -333,6 +338,48 @@ export class ForallPropositionAST extends Proposition {
 		return `∀${this.variable.toString()}:${this.proposition.displayFancy(1)}`;
 	}
 	type: ASTTypes = ASTTypes.SYM;
+}
+
+export class TermEqualsAST extends Proposition {
+	variables: Term[];
+	constructor(left: Term, right: Term) {
+		super();
+		this.variables = [left, right];
+	}
+	type: ASTTypes = ASTTypes.SYM;
+	toString(): string {
+		return `(${this.variables[0]}=${this.variables[1]})`;
+	}
+	clone() {
+		return new TermEqualsAST(this.variables[0], this.variables[1]);
+	}
+	displayFancy(level?: number): string {
+		if (level == 1) {
+			return `(${this.variables[0].displayFancy(1)}=${this.variables[1].displayFancy(1)})`;
+		}
+		return `${this.variables[0].displayFancy(1)}=${this.variables[1].displayFancy(1)}`;
+	}
+}
+
+export class TermBelongToAST extends Proposition {
+	variables: Term[];
+	constructor(left: Term, right: Term) {
+		super();
+		this.variables = [left, right];
+	}
+	type: ASTTypes = ASTTypes.SYM;
+	toString(): string {
+		return `(${this.variables[0]}∈${this.variables[1]})`;
+	}
+	clone() {
+		return new TermBelongToAST(this.variables[0], this.variables[1]);
+	}
+	displayFancy(level?: number): string {
+		if (level == 1) {
+			return `(${this.variables[0].displayFancy(1)}∈${this.variables[1].displayFancy(1)})`;
+		}
+		return `${this.variables[0].displayFancy(1)}∈${this.variables[1].displayFancy(1)}`;
+	}
 }
 
 export class Term {

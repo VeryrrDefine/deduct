@@ -30,6 +30,8 @@ export const Exists = createToken({ name: 'Exists', pattern: /E|∃/ });
 export const VDash = createToken({ name: 'VDash', pattern: /⊢|\|-/ });
 export const VDashDouble = createToken({ name: 'VDashDouble', pattern: /⊨|\|=/ });
 export const Colon = createToken({ name: 'colon', pattern: /:/ });
+export const Equals = createToken({ name: 'Equals', pattern: /=/ });
+export const BelongTo = createToken({ name: 'BelongTo', pattern: /∈|@/ });
 const Whitespace = createToken({
 	name: 'Whitespace',
 	pattern: /\s+/,
@@ -55,6 +57,8 @@ export const allTokens = [
 	Exists,
 	Disjunction,
 	Conjunction,
+	Equals,
+	BelongTo,
 ];
 
 export const PropositionLexer = new Lexer(allTokens);

@@ -2,10 +2,12 @@ import type { IToken, TokenType } from 'chevrotain';
 import { FormalSystemRule } from '../formalsystem/fsRule';
 import PropositionLexer, {
 	AnyProposition,
+	BelongTo,
 	Colon,
 	Comma,
 	Conjunction,
 	Disjunction,
+	Equals,
 	Exists,
 	Forall,
 	LeftRightarrow,
@@ -30,6 +32,8 @@ import {
 	NotPropositionAST,
 	Proposition,
 	Term,
+	TermBelongToAST,
+	TermEqualsAST,
 } from './ast';
 
 export class PropositionParser {
@@ -73,18 +77,36 @@ export class PropositionParser {
 		if (cur.tokenType === Not) {
 			this.nextToken();
 			left = new NotPropositionAST(this.parseProposition(PropositionParser.priorities.NOT));
-		} else if (cur.tokenType === AnyProposition) {
-			let token = this.consumeCurrent(AnyProposition);
-
-			left = new AnyPropositionAST(token.image.slice(1));
 		} else if (cur.tokenType === LParen) {
 			this.nextToken();
 			left = this.parseProposition(PropositionParser.priorities.LOWEST);
 			this.consumeCurrent(RParen);
-		} else if (cur.tokenType === LetterProposition) {
-			let token = this.consumeCurrent(LetterProposition);
+		} else if (cur.tokenType === AnyProposition || cur.tokenType === LetterProposition) {
+			let token = cur;
+			let left_temp: Proposition;
+			if (cur.tokenType === AnyProposition) {
+				left_temp = new AnyPropositionAST(token.image.slice(1));
+			} else {
+				left_temp = new LetterPropositionAST(token.image);
+			}
+			// 下一个token有没有符号 等于， 属于？
+			let nexttoken = this.getNextToken();
 
-			left = new LetterPropositionAST(token.image);
+			// 判断下一个token是否存在
+			if (nexttoken && (nexttoken.tokenType === Equals || nexttoken.tokenType == BelongTo)) {
+				// 直接从parseVariable解析变量
+				let left_temp2 = this.parseVariable();
+				this.nextToken();
+				let right = this.parseVariable();
+				if (nexttoken.tokenType === Equals) {
+					left = new TermEqualsAST(left_temp2, right);
+				} else {
+					left = new TermBelongToAST(left_temp2, right);
+				}
+			} else {
+				left = left_temp;
+				this.nextToken();
+			}
 		} else if (cur.tokenType === Forall) {
 			// 结构∀x:y
 			this.consumeCurrent(Forall);
@@ -169,6 +191,10 @@ export class PropositionParser {
 	 */
 	nextToken() {
 		return this.tokens[this.pos++];
+	}
+
+	getNextToken() {
+		return this.tokens[this.pos + 1];
 	}
 
 	consumeCurrent(tokenType: TokenType) {
