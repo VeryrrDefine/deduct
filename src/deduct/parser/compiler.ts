@@ -85,7 +85,7 @@ export class PropositionParser {
 
 			left = new LetterPropositionAST(token.image);
 		} else if (cur.tokenType === Forall) {
-			// Vx:y
+			// 结构∀x:y
 			this.consumeCurrent(Forall);
 			let variable = this.parseVariable();
 
