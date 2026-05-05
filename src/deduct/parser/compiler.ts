@@ -6,6 +6,7 @@ import PropositionLexer, {
 	Comma,
 	Conjunction,
 	Disjunction,
+	Exists,
 	Forall,
 	LeftRightarrow,
 	LetterProposition,
@@ -20,6 +21,7 @@ import {
 	AnyTermAST,
 	ConjunctionPropositionAST,
 	DisjunctionPropositionAST,
+	ExistsPropositionAST,
 	ForallPropositionAST,
 	IffPropositionAST,
 	ImplicationPropositionAST,
@@ -29,7 +31,6 @@ import {
 	Proposition,
 	Term,
 } from './ast';
-import type { getPriority } from 'node:os';
 
 export class PropositionParser {
 	tokens: IToken[];
@@ -56,7 +57,7 @@ export class PropositionParser {
 			return new LetterTermAST(cur.image);
 		} else if (cur.tokenType === AnyProposition) {
 			this.consumeCurrent(cur.tokenType);
-			return new AnyTermAST(cur.image);
+			return new AnyTermAST(cur.image.slice(1));
 		} else {
 			throw new Error(`Unknown Variable Token: ${cur.tokenType.name}`);
 		}
@@ -93,6 +94,15 @@ export class PropositionParser {
 
 			let expression = this.parseProposition(PropositionParser.priorities.NOT);
 			left = new ForallPropositionAST(variable, expression);
+		} else if (cur.tokenType === Exists) {
+			// 结构∃x:y
+			this.consumeCurrent(Exists);
+			let variable = this.parseVariable();
+
+			this.consumeCurrent(Colon);
+
+			let expression = this.parseProposition(PropositionParser.priorities.NOT);
+			left = new ExistsPropositionAST(variable, expression);
 		} else {
 			throw new Error(`Unknown Proposition Token: ${cur.tokenType.name}`);
 		}
