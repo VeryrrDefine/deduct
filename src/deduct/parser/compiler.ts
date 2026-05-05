@@ -2,9 +2,11 @@ import type { IToken, TokenType } from 'chevrotain';
 import { FormalSystemRule } from '../formalsystem/fsRule';
 import PropositionLexer, {
 	AnyProposition,
+	Colon,
 	Comma,
 	Conjunction,
 	Disjunction,
+	Forall,
 	LeftRightarrow,
 	LetterProposition,
 	LParen,
@@ -15,13 +17,17 @@ import PropositionLexer, {
 } from './lexer';
 import {
 	AnyPropositionAST,
+	AnyTermAST,
 	ConjunctionPropositionAST,
 	DisjunctionPropositionAST,
+	ForallPropositionAST,
 	IffPropositionAST,
 	ImplicationPropositionAST,
 	LetterPropositionAST,
+	LetterTermAST,
 	NotPropositionAST,
 	Proposition,
+	Term,
 } from './ast';
 import type { getPriority } from 'node:os';
 
@@ -43,6 +49,18 @@ export class PropositionParser {
 		IFF: 6,
 		LOWEST: 7,
 	};
+	parseVariable(priority = PropositionParser.priorities.LOWEST): Term {
+		const cur = this.curToken();
+		if (cur.tokenType === LetterProposition) {
+			this.consumeCurrent(cur.tokenType);
+			return new LetterTermAST(cur.image);
+		} else if (cur.tokenType === AnyProposition) {
+			this.consumeCurrent(cur.tokenType);
+			return new AnyTermAST(cur.image);
+		} else {
+			throw new Error(`Unknown Variable Token: ${cur.tokenType.name}`);
+		}
+	}
 	/**
 	 * Any parse,must stop, the 1st token after this proposition,
 	 */
@@ -66,8 +84,17 @@ export class PropositionParser {
 			let token = this.consumeCurrent(LetterProposition);
 
 			left = new LetterPropositionAST(token.image);
+		} else if (cur.tokenType === Forall) {
+			// Vx:y
+			this.consumeCurrent(Forall);
+			let variable = this.parseVariable();
+
+			this.consumeCurrent(Colon);
+
+			let expression = this.parseProposition(PropositionParser.priorities.NOT);
+			left = new ForallPropositionAST(variable, expression);
 		} else {
-			throw new Error(`Unknown Proposition: ${cur.tokenType.name}`);
+			throw new Error(`Unknown Proposition Token: ${cur.tokenType.name}`);
 		}
 
 		let thisToken = this.tokens[this.pos];

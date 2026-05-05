@@ -312,11 +312,11 @@ export class ExistsPropositionAST extends Proposition {
 }
 
 export class ForallPropositionAST extends Proposition {
-	variable: AnyTermAST | LetterTermAST;
+	variable: Term;
 	get proposition() {
 		return this.propositions[0];
 	}
-	constructor(variable: AnyTermAST | LetterTermAST, proposition: Proposition) {
+	constructor(variable: Term, proposition: Proposition) {
 		super([proposition]);
 		this.variable = variable;
 	}
