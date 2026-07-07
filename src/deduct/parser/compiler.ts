@@ -38,9 +38,11 @@ import {
 
 export class PropositionParser {
 	tokens: IToken[];
+	image: string;
 	pos: number = 0;
-	constructor(x: IToken[]) {
+	constructor(x: IToken[],image:string) {
 		this.tokens = x;
+		this.image = image;
 	}
 	curToken() {
 		if (this.pos >= this.tokens.length) throw new Error('Index out of range');
@@ -69,7 +71,7 @@ export class PropositionParser {
 	/**
 	 * Any parse,must stop, the 1st token after this proposition,
 	 */
-	parseProposition(priority = PropositionParser.priorities.LOWEST): Proposition {
+	parseProposition(priority = PropositionParser.priorities.LOWEST, checkEOF=false): Proposition {
 		const cur = this.curToken();
 
 		let left: Proposition = new Proposition();
@@ -139,18 +141,14 @@ export class PropositionParser {
 					this.nextToken();
 					let right = this.parseProposition(this.getPriority(thisToken.tokenType));
 					return new infix(left, right);
-				} else {
-					return left;
 				}
-			else {
-				return left;
-			}
-			// else {
-			// 	throw new Error(`Unsupported: ${thisToken.tokenType.name}`);
-			// }
-		} else {
-			return left;
 		}
+		if (checkEOF) {
+			if (this.pos > this.tokens.length) {
+				console.warn("Detected EOF lost on parsing propositions on parsing"+this.image, this.pos, this.tokens.length)
+			}
+		}
+		return left;
 	}
 	getPriority(x: TokenType) {
 		switch (x) {
@@ -172,7 +170,7 @@ export class PropositionParser {
 		[Conjunction.name]: ConjunctionPropositionAST,
 	};
 
-	parseRule(): FormalSystemRule {
+	parseRule(checkEOF=false): FormalSystemRule {
 		const conditions: Proposition[] = [];
 		while (this.curToken().tokenType !== VDash) {
 			conditions.push(this.parseProposition());
@@ -181,7 +179,7 @@ export class PropositionParser {
 			else this.consumeCurrent(Comma);
 		}
 		this.consumeCurrent(VDash);
-		const result: Proposition = this.parseProposition();
+		const result: Proposition = this.parseProposition(undefined,checkEOF);
 		return new FormalSystemRule(conditions, result);
 	}
 
@@ -214,9 +212,9 @@ export function parseAndConvertToAst(code: string, isRule = false): any {
 	}
 	// console.log(lexResult);
 	// throw new Error('');
-	const parser = new PropositionParser(lexResult.tokens);
+	const parser = new PropositionParser(lexResult.tokens, code);
 
-	return isRule ? parser.parseRule() : parser.parseProposition();
+	return isRule ? parser.parseRule(true) : parser.parseProposition(undefined,true);
 	// const parser = new PropositionParser();
 	// parser.input = lexResult.tokens;
 	// const cst = isRule ? parser.fsRule() : parser.proposition();
