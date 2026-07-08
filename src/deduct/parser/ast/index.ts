@@ -62,10 +62,11 @@ export class Proposition extends AST {
 			let t2 = t.propositions
 				.map((x) => {
 					let q = x.findAnyProposition(isNotPreApply);
-					if (x instanceof AnyPropositionPreApplyAST) {
+					if (x instanceof AnyPropositionPreApplyAST && isNotPreApply) {
+						return undefined;
 					}
 					return q;
-				})
+				}).filter(x=>x!==undefined)
 				.flat();
 			return t2;
 		})(this);

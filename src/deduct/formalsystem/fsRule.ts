@@ -20,6 +20,7 @@ export class FormalSystemRule {
 	name = '';
 	payload: any;
 	replaceable: string[];
+	replaceableVariables: string[];
 	constructor(condition: Proposition[], result: Proposition) {
 		this.condition = condition;
 		this.result = result;
@@ -27,6 +28,7 @@ export class FormalSystemRule {
 		this.steps = [];
 
 		this.replaceable = this.getReplaceables();
+		this.replaceableVariables=[];
 	}
 	getReplaceables() {
 		const matchTable: MatchTable = {};
