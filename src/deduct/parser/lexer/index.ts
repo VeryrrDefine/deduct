@@ -16,7 +16,7 @@ export const AnyVariable = createToken({
 
 export const LetterVariable = createToken({
 	name: 'LetterVariable',
-	pattern: /#[a-z_][a-zA-Z0-9_]*/,
+	pattern: /#[a-bd-eg-oq-z_][a-zA-Z0-9_]*/,
 });
 
 export const LeftRightarrow = createToken({
