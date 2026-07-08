@@ -61,25 +61,6 @@ testmdt: Test Meta Deduct Theorem for appliable rules
 
 Run test: `deno --allow-env --sloppy-imports --allow-write --allow-read test/test1.test.ts` (Currently open the repl)
 
-## Help
-
-Check Axiom/Theorems: type `rule`
-
-Check Proof List: type `list`
-
-Use axiom/Theorem: type the id of the rule
-
-Use Hypothesis: type `hyp`. `.exit` to exit hypothesis
-
-Exit: type `exit`
-
-Save theorems: type `save`
-
-Load theorems: type `load`
-
-Use Metarule: type `metarule`
-
-Test mdt metaRule: type `testmdt`
 
 ## Builtin axioms & definitions
 
