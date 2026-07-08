@@ -1,8 +1,10 @@
 import {
 	AnyPropositionAST as AnyProp,
 	AnyPropositionAST,
+	AnyTermAST,
 	ConjunctionPropositionAST as Conj,
 	DisjunctionPropositionAST as Disj,
+	ForallPropositionAST,
 	IffPropositionAST as Iff,
 	ImplicationPropositionAST as Impl,
 	ImplicationPropositionAST,
@@ -386,7 +388,7 @@ export class FormalSystem {
 				return this.findRules(x.ruleString);
 			} else {
 				for (const entry of this.metaRules) {
-					if (x.metaRules.startsWith(entry[0])) {
+					if (entry[0] && x.metaRules.startsWith(entry[0])) {
 						return entry[2](x.ruleString.slice(1));
 					}
 				}
@@ -396,13 +398,15 @@ export class FormalSystem {
 		return null;
 	}
 	metaRules: [
-		symbol: string,
+		symbol: string|undefined,
 		metaRuleName: string,
 		function: (x: string) => FormalSystemRule | null,
 	][] = [
 		['<', 'midt', this.metaInvDeductTheorem.bind(this)],
 		['c', 'mcdt', this.metaConditionTheorem.bind(this)],
 		['>', 'mdt', this.metaDeductTheorem.bind(this)],
+		// [undefined, 'mcvt', this.metaTheorem.bind(this)],
+		[undefined, 'mq', this.firstLogicAxiomSchema.bind(this)],
 	];
 	relatively(x: number) {
 		return x - this.steps.length;
@@ -417,6 +421,25 @@ export class FormalSystem {
 	getStepIncludedHyp(x: number) {
 		if (x < this.hypothesis.length) return this.hypothesis[x];
 		return this.steps[x - this.hypothesis.length];
+	}
+	firstLogicAxiomSchema(idx: string): FormalSystemRule | null {
+		const rule = this.genRule(idx);
+		if (!rule) throw new Error('Rule not exists');
+		if (rule.isTheorem) throw new Error(`Rule is a theorem`)
+		if (rule.condition.length !== 0) throw new Error(`Rule must not have conditions`)
+		let terms = rule.result.findAnyTerm(true);
+		console.log(terms);
+		const newPArray = terms
+		let new2 = 0;
+		while (newPArray.includes('' + new2)) {
+			new2++;
+		}
+		let new3 = new AnyTermAST('' + new2);
+		let newResult = new ForallPropositionAST(new3, rule.result.clone());
+		let newRule = new FormalSystemRule([], newResult)
+		newRule.name = `v${idx}`
+		newRule.addInto(this, newRule.name);
+		return newRule
 	}
 	metaInvDeductTheorem(idx: string): FormalSystemRule | null {
 		if (idx[0] === '>') {

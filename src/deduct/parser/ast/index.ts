@@ -76,12 +76,19 @@ export class Proposition extends AST {
 			let v2 = t.variables
 			.map((x)=> {
 				let q = x.findAnyTerm(isNotPreApply)
-					if (x instanceof AnyTermPreApplyAST && isNotPreApply) {
-						return undefined;
-					}
-					return q;
+				if (x instanceof AnyTermPreApplyAST && isNotPreApply) {
+					return undefined;
+				}
+				return q;
 			}).filter(x=>x!==undefined).flat();
-			return v2;
+			let t2 = t.propositions
+			.map((x) => {
+				let q = x.findAnyTerm(isNotPreApply);
+				
+				return q;
+			}).filter(x=>x!==undefined)
+			.flat();
+			return [...new Set(v2.concat(t2))];
 		})(this)
 	}
 	displayFancy(level?: number) {
@@ -307,49 +314,47 @@ export class ConjunctionPropositionAST extends Proposition {
 }
 
 export class ExistsPropositionAST extends Proposition {
-	variable: Term;
 	get proposition() {
 		return this.propositions[0];
 	}
 	constructor(variable: Term, proposition: Proposition) {
 		super([proposition]);
-		this.variable = variable;
+		this.variables = [variable]
 	}
 	toString(): string {
-		return `(E${this.variable}:(${this.proposition}))`;
+		return `(E${this.variables[0]}:(${this.proposition}))`;
 	}
 	clone() {
-		return new ExistsPropositionAST(this.variable, this.proposition);
+		return new ExistsPropositionAST(this.variables[0], this.proposition);
 	}
 	displayFancy(level?: number): string {
 		if (level == 1) {
-			return `(∃${this.variable.toString()}:${this.proposition.displayFancy(1)})`;
+			return `(∃${this.variables[0].toString()}:${this.proposition.displayFancy(1)})`;
 		}
-		return `∃${this.variable.toString()}:${this.proposition.displayFancy(1)}`;
+		return `∃${this.variables[0].toString()}:${this.proposition.displayFancy(1)}`;
 	}
 	type: ASTTypes = ASTTypes.SYM;
 }
 
 export class ForallPropositionAST extends Proposition {
-	variable: Term;
 	get proposition() {
 		return this.propositions[0];
 	}
 	constructor(variable: Term, proposition: Proposition) {
-		super([proposition]);
-		this.variable = variable;
+		super([proposition]);	
+		this.variables = [variable]	
 	}
 	toString(): string {
-		return `(V${this.variable}:(${this.proposition}))`;
+		return `(V${this.variables[0]}:(${this.proposition}))`;
 	}
 	clone() {
-		return new ForallPropositionAST(this.variable, this.proposition);
+		return new ForallPropositionAST(this.variables[0], this.proposition);
 	}
 	displayFancy(level?: number): string {
 		if (level == 1) {
-			return `(∀${this.variable.toString()}:${this.proposition.displayFancy(1)})`;
+			return `(∀${this.variables[0].toString()}:${this.proposition.displayFancy(1)})`;
 		}
-		return `∀${this.variable.toString()}:${this.proposition.displayFancy(1)}`;
+		return `∀${this.variables[0].toString()}:${this.proposition.displayFancy(1)}`;
 	}
 	type: ASTTypes = ASTTypes.SYM;
 }
