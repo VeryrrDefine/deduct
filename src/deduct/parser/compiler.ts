@@ -244,6 +244,19 @@ export function parseAndConvertToAst(code: string, isRule = false): any {
 	// return visitor.visit(cst);
 }
 
+export function parseToTerm(code: string) {
+	const lexResult = PropositionLexer.tokenize(code);
+	if (lexResult.errors.length > 0) {
+		throw `Lexing Error: ${lexResult.errors.map((e) => e.message).join(', ')}, string ${code}`;
+	}
+	// console.log(lexResult);
+	// throw new Error('');
+	const parser = new PropositionParser(lexResult.tokens, code);
+
+	return  parser.parseTerm() ;
+
+}
+
 export function toProposition(code: string): Proposition {
 	return parseAndConvertToAst(code);
 }

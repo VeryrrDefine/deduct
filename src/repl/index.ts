@@ -1,7 +1,7 @@
 import readline from 'node:readline';
-import { toProposition } from '../deduct/parser/compiler';
+import { parseToTerm as parseToTerm, toProposition } from '../deduct/parser/compiler';
 import { type TheoremJSON } from '../deduct/formalsystem/fsRule';
-import type { MatchStrTable, MatchTable } from '../deduct/formalsystem/matchTable';
+import type { MatchStrTable, MatchTable, MatchVarTable } from '../deduct/formalsystem/matchTable';
 import { TheoremJSONHandler } from '../deduct/formalsystem/theorem-json-handler';
 import fs from 'node:fs/promises';
 import { FormalSystem } from '../deduct/formalsystem';
@@ -206,9 +206,16 @@ async function replQuestion() {
 			const replacements: MatchTable = {};
 			const match_map: MatchStrTable = {};
 			for (let i = 0; i < rule.replaceable.length; i++) {
-				const repl = await ask(`Apply $${rule.replaceable[i]}: `);
+				const repl = await ask(`Apply Proposition $${rule.replaceable[i]}: `);
 				replacements[rule.replaceable[i]] = toProposition(repl);
 				match_map[rule.replaceable[i]] = repl;
+			}
+			const replacementVariables: MatchVarTable = {};
+			const match_variable_map: MatchStrTable = {};
+			for (let i = 0; i < rule.replaceableVariables.length; i++) {
+				const repl = await ask(`Apply Variable #$${rule.replaceableVariables[i]}: `);
+				replacementVariables[rule.replaceableVariables[i]] = parseToTerm(repl);
+				match_variable_map[rule.replaceableVariables[i]] = repl;
 			}
 			const result = formalSystem.deduct(command, match_map, chosen_condition);
 			console.log(`Result: ${result[0].displayFancy()}`);
