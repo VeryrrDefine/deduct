@@ -44,10 +44,10 @@ export class Proposition extends AST {
 	toString() {
 		return '[bx]';
 	}
-	replaceAnyProposition(x: string, replaceTo: Proposition, isNotPreApply = false): Proposition {
+	replaceAnyProposition(x: string, replaceTo: Proposition, notToPreApply = false): Proposition {
 		let new2 = new Proposition();
 		new2.propositions = this.propositions.map((t) => {
-			let res = t.replaceAnyProposition(x, replaceTo, isNotPreApply);
+			let res = t.replaceAnyProposition(x, replaceTo, notToPreApply);
 			return res;
 		});
 		Object.setPrototypeOf(new2, Object.getPrototypeOf(this));
@@ -132,7 +132,7 @@ export class LetterPropositionAST extends Proposition {
 	displayFancy(level?: number): string {
 		return this.toString();
 	}
-	replaceAnyProposition(x: string, replaceTo: Proposition, isNotPreApply?: boolean): Proposition {
+	replaceAnyProposition(x: string, replaceTo: Proposition, notToPreApply?: boolean): Proposition {
 		return this;
 	}
 	type: ASTTypes = ASTTypes.REPLVAR;
@@ -147,8 +147,8 @@ export class AnyPropositionAST extends Proposition {
 	toString(): string {
 		return `($${this.name})`;
 	}
-	replaceAnyProposition(x: string, replaceTo: Proposition, isNotPreApply = false): Proposition {
-		if (!isNotPreApply) {
+	replaceAnyProposition(x: string, replaceTo: Proposition, notToPreApply = false): Proposition {
+		if (!notToPreApply) {
 			return new AnyPropositionPreApplyAST(this.name);
 		}
 		return this;
@@ -175,8 +175,8 @@ export class AnyPropositionPreApplyAST extends Proposition {
 	toString(): string {
 		return `($${this.name}!)`;
 	}
-	replaceAnyProposition(x: string, replaceTo: Proposition, isNotPreApply = false): Proposition {
-		if (isNotPreApply && this.name == x) return replaceTo;
+	replaceAnyProposition(x: string, replaceTo: Proposition, notToPreApply = false): Proposition {
+		if (notToPreApply && this.name == x) return replaceTo;
 		return this;
 	}
 	clone() {

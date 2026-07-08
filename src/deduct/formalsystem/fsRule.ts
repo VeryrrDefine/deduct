@@ -64,16 +64,16 @@ export class FormalSystemRule {
 			FormalSystem.match(propositions[i], this.condition[i], matchTable);
 		}
 
-		let result = this.result.clone().replaceAnyProposition('', new Proposition(), false);
-		FormalSystem.debugLog(`Rule result before replaced: ${result}`);
+		let hasPreApply = this.result.clone().replaceAnyProposition('', new Proposition(), false);
+		FormalSystem.debugLog(`Rule result before replaced: ${hasPreApply}`);
 		const keys = Object.keys(matchTable);
 
 		for (const key of keys) {
 			FormalSystem.debugLog(`Replacing result ${key} to ${matchTable[key]}`);
-			result = result.replaceAnyProposition(key, matchTable[key], true);
+			hasPreApply = hasPreApply.replaceAnyProposition(key, matchTable[key], true);
 		}
-		FormalSystem.debugLog(`Fin: ${result}`);
-		return new RuleResult(result, this.name, chosen_condition);
+		FormalSystem.debugLog(`Fin: ${hasPreApply}`);
+		return new RuleResult(hasPreApply, this.name, chosen_condition);
 	}
 	toString() {
 		let result = this.condition.map((x) => x.toString()).join(',');
