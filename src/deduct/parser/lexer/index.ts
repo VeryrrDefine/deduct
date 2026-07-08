@@ -9,6 +9,16 @@ export const LetterProposition = createToken({
 	pattern: /[a-z_][a-zA-Z0-9_]*/,
 });
 
+export const AnyVariable = createToken({
+	name: 'AnyVariable',
+	pattern: /#\$[a-zA-Z0-9_]*/,
+});
+
+export const LetterVariable = createToken({
+	name: 'LetterVariable',
+	pattern: /#[a-z_][a-zA-Z0-9_]*/,
+});
+
 export const LeftRightarrow = createToken({
 	name: 'LeftRightarrow',
 	pattern: /<>|↔/,
@@ -44,6 +54,8 @@ export const allTokens = [
 	Whitespace,
 	AnyProposition,
 	LetterProposition,
+	AnyVariable,
+	LetterVariable,
 	VDash,
 	VDashDouble,
 	Comma,

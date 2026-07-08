@@ -2,6 +2,7 @@ import type { IToken, TokenType } from 'chevrotain';
 import { FormalSystemRule } from '../formalsystem/fsRule';
 import PropositionLexer, {
 	AnyProposition,
+	AnyVariable,
 	BelongTo,
 	Colon,
 	Comma,
@@ -12,6 +13,7 @@ import PropositionLexer, {
 	Forall,
 	LeftRightarrow,
 	LetterProposition,
+	LetterVariable,
 	LParen,
 	Not,
 	Rightarrow,
@@ -58,12 +60,12 @@ export class PropositionParser {
 	};
 	parseVariable(priority = PropositionParser.priorities.LOWEST): Term {
 		const cur = this.curToken();
-		if (cur.tokenType === LetterProposition) {
+		if (cur.tokenType === LetterVariable) {
 			this.consumeCurrent(cur.tokenType);
-			return new LetterTermAST(cur.image);
-		} else if (cur.tokenType === AnyProposition) {
+			return new LetterTermAST(cur.image.slice(1));
+		} else if (cur.tokenType === AnyVariable) {
 			this.consumeCurrent(cur.tokenType);
-			return new AnyTermAST(cur.image.slice(1));
+			return new AnyTermAST(cur.image.slice(2));
 		} else {
 			throw new Error(`Unknown Variable Token: ${cur.tokenType.name}`);
 		}
@@ -91,24 +93,24 @@ export class PropositionParser {
 			} else {
 				left_temp = new LetterPropositionAST(token.image);
 			}
-			// 下一个token有没有符号 等于， 属于？
-			let nexttoken = this.getNextToken();
+			// // 下一个token有没有符号 等于， 属于？
+			// let nexttoken = this.getNextToken();
 
-			// 判断下一个token是否存在
-			if (nexttoken && (nexttoken.tokenType === Equals || nexttoken.tokenType == BelongTo)) {
-				// 直接从parseVariable解析变量
-				let left_temp2 = this.parseVariable();
-				this.nextToken();
-				let right = this.parseVariable();
-				if (nexttoken.tokenType === Equals) {
-					left = new TermEqualsAST(left_temp2, right);
-				} else {
-					left = new TermBelongToAST(left_temp2, right);
-				}
-			} else {
-				left = left_temp;
-				this.nextToken();
-			}
+			// // 判断下一个token是否存在
+			// if (nexttoken && (nexttoken.tokenType === Equals || nexttoken.tokenType == BelongTo)) {
+			// 	// 直接从parseVariable解析变量
+			// 	let left_temp2 = this.parseVariable();
+			// 	this.nextToken();
+			// 	let right = this.parseVariable();
+			// 	if (nexttoken.tokenType === Equals) {
+			// 		left = new TermEqualsAST(left_temp2, right);
+			// 	} else {
+			// 		left = new TermBelongToAST(left_temp2, right);
+			// 	}
+			// } else {
+			left = left_temp;
+			this.nextToken();
+			// }
 		} else if (cur.tokenType === Forall) {
 			// 结构∀x:y
 			this.consumeCurrent(Forall);
@@ -127,8 +129,19 @@ export class PropositionParser {
 
 			let expression = this.parseProposition(PropositionParser.priorities.NOT);
 			left = new ExistsPropositionAST(variable, expression);
+		} else if (cur.tokenType === AnyVariable || cur.tokenType === LetterVariable) {
+			let leftterm = this.parseTerm();
+			let curT = this.curToken();
+			this.consumeCurrent(curT.tokenType);
+			let rightterm = this.parseTerm();
+			if (curT.tokenType === BelongTo) {
+				left = new TermBelongToAST(leftterm, rightterm)
+			}
+			if (curT.tokenType === Equals) {
+				left = new TermEqualsAST(leftterm,rightterm)
+			}
 		} else {
-			throw new Error(`Unknown Proposition Token: ${cur.tokenType.name}`);
+			throw new Error(`Unknown Proposition Token: ${cur.tokenType.name} on ${this.image}`);
 		}
 
 		let thisToken = this.tokens[this.pos];
@@ -169,6 +182,12 @@ export class PropositionParser {
 		[Disjunction.name]: DisjunctionPropositionAST,
 		[Conjunction.name]: ConjunctionPropositionAST,
 	};
+
+	parseTerm(priority = PropositionParser.priorities.LOWEST): Term{
+		let left = this.parseVariable();
+
+		return left;
+	}
 
 	parseRule(checkEOF=false): FormalSystemRule {
 		const conditions: Proposition[] = [];

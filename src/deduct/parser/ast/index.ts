@@ -354,6 +354,7 @@ export class TermEqualsAST extends Proposition {
 		return new TermEqualsAST(this.variables[0], this.variables[1]);
 	}
 	displayFancy(level?: number): string {
+		console.log(this)
 		if (level == 1) {
 			return `(${this.variables[0].displayFancy(1)}=${this.variables[1].displayFancy(1)})`;
 		}
@@ -414,7 +415,7 @@ export class LetterTermAST extends Term {
 		this.name = name ?? '';
 	}
 	toString(): string {
-		return this.name;
+		return `(#${this.name})`;
 	}
 	clone() {
 		return new LetterTermAST(this.name);
@@ -423,7 +424,7 @@ export class LetterTermAST extends Term {
 		return [];
 	}
 	displayFancy(level?: number): string {
-		return this.toString();
+		return `#${this.name}`;
 	}
 	type: ASTTypes = ASTTypes.REPLVAR;
 }
@@ -435,7 +436,7 @@ export class AnyTermAST extends Term {
 		this.name = name ?? '';
 	}
 	toString(): string {
-		return `($${this.name})`;
+		return `(#$${this.name})`;
 	}
 	replaceAnyTerm(x: string, replaceTo: Term, isNotPreApply = false): Term {
 		if (!isNotPreApply) {
@@ -451,7 +452,7 @@ export class AnyTermAST extends Term {
 		return [];
 	}
 	displayFancy(level?: number): string {
-		return '$' + this.name;
+		return '#$' + this.name;
 	}
 	type: ASTTypes = ASTTypes.REPLVAR;
 }
@@ -463,7 +464,7 @@ export class AnyTermPreApplyAST extends Term {
 		this.name = name ?? '';
 	}
 	toString(): string {
-		return `($${this.name}!)`;
+		return `(#$${this.name}!)`;
 	}
 	replaceAnyTerm(x: string, replaceTo: Term, isNotPreApply = false): Term {
 		if (isNotPreApply && this.name == x) return replaceTo;
@@ -477,7 +478,7 @@ export class AnyTermPreApplyAST extends Term {
 		return [];
 	}
 	displayFancy(level?: number): string {
-		return '$' + this.name + '!';
+		return '#$' + this.name + '!';
 	}
 	type: ASTTypes = ASTTypes.REPLVAR;
 }
