@@ -575,7 +575,6 @@ export class FormalSystem {
 
 		if (!d.condition.length) throw new LogicError('No Hypthesis');
 
-		if (idx == 'mp') throw new LogicError('>mp is (($0 > $1) ⊢ ($0 > $1))');
 
 		let s: Proposition = new Proposition();
 
