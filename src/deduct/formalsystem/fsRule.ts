@@ -31,8 +31,20 @@ export class FormalSystemRule {
 		this.replaceableVariables=[];
 	}
 	getReplaceables() {
-		let result = this.result.clone();
-		let w = [...new Set(result.findAnyProposition(true))];
+		const matchTable: MatchTable = {};
+		for (let i = 0; i < this.conditionNumber; i++) {
+			FormalSystem.match(this.condition[i], this.condition[i], matchTable);
+		}
+
+		let result = this.result.clone().replaceAnyProposition('', new Proposition(), false);
+
+		const keys = Object.keys(matchTable);
+
+		for (const key of keys) {
+			result = result.replaceAnyProposition(key, matchTable[key], true);
+		}
+		let w = [...new Set(result.findAnyProposition())];
+		// console.log('Checking', result, w);
 		return w;
 	}
 	static asTheorem(condition: Proposition[], result: Proposition, steps: Step[], name: string) {
