@@ -71,6 +71,19 @@ export class Proposition extends AST {
 			return t2;
 		})(this);
 	}
+	findAnyTerm(isNotPreApply = false): string[] {
+		return (function (t) {
+			let v2 = t.variables
+			.map((x)=> {
+				let q = x.findAnyTerm(isNotPreApply)
+					if (x instanceof AnyTermPreApplyAST && isNotPreApply) {
+						return undefined;
+					}
+					return q;
+			}).filter(x=>x!==undefined).flat();
+			return v2;
+		})(this)
+	}
 	displayFancy(level?: number) {
 		return '';
 	}
