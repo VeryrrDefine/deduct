@@ -28,21 +28,25 @@ export class FormalSystemRule {
 		this.steps = [];
 
 		this.replaceable = this.getReplaceables();
-		this.replaceableVariables=this.getReplaceableVariables();
+		this.replaceableVariables = this.getReplaceableVariables();
 	}
 	getReplaceables() {
-		let conditions_replaces = [... new Set(this.condition.map((x)=>[...new Set(x.findAnyProposition(true))]).flat())];
+		let conditions_replaces = [
+			...new Set(this.condition.map((x) => [...new Set(x.findAnyProposition(true))]).flat()),
+		];
 		let result = this.result.clone();
 		let w = [...new Set(result.findAnyProposition(true))];
 
-		return [...new Set(w.filter(x=>!(conditions_replaces.includes(x))))];
+		return [...new Set(w.filter((x) => !conditions_replaces.includes(x)))];
 	}
 	getReplaceableVariables() {
-		let conditions_replaces = [... new Set(this.condition.map((x)=>[...new Set(x.findAnyTerm(true))]).flat())];
+		let conditions_replaces = [
+			...new Set(this.condition.map((x) => [...new Set(x.findAnyTerm(true))]).flat()),
+		];
 		let result = this.result.clone();
 		let w = [...new Set(result.findAnyTerm(true))];
 
-		return [...new Set(w.filter(x=>!(conditions_replaces.includes(x))))];
+		return [...new Set(w.filter((x) => !conditions_replaces.includes(x)))];
 	}
 	static asTheorem(condition: Proposition[], result: Proposition, steps: Step[], name: string) {
 		const rule = new FormalSystemRule(condition, result);

@@ -13,7 +13,6 @@ export type MatchVarTable = {
 	[key: string]: Term;
 };
 
-
 export function matchTableToStrTable(z: MatchTable) {
 	return Object.fromEntries(Object.entries(z).map((x) => [x[0], x.toString()]));
 }

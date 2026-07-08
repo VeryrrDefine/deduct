@@ -398,7 +398,7 @@ export class FormalSystem {
 		return null;
 	}
 	metaRules: [
-		symbol: string|undefined,
+		symbol: string | undefined,
 		metaRuleName: string,
 		function: (x: string) => FormalSystemRule | null,
 	][] = [
@@ -425,21 +425,21 @@ export class FormalSystem {
 	firstLogicAxiomSchema(idx: string): FormalSystemRule | null {
 		const rule = this.genRule(idx);
 		if (!rule) throw new Error('Rule not exists');
-		if (rule.isTheorem) throw new Error(`Rule is a theorem`)
-		if (rule.condition.length !== 0) throw new Error(`Rule must not have conditions`)
+		if (rule.isTheorem) throw new Error(`Rule is a theorem`);
+		if (rule.condition.length !== 0) throw new Error(`Rule must not have conditions`);
 		let terms = rule.result.findAnyTerm(true);
 		console.log(terms);
-		const newPArray = terms
+		const newPArray = terms;
 		let new2 = 0;
 		while (newPArray.includes('' + new2)) {
 			new2++;
 		}
 		let new3 = new AnyTermAST('' + new2);
 		let newResult = new ForallPropositionAST(new3, rule.result.clone());
-		let newRule = new FormalSystemRule([], newResult)
-		newRule.name = `v${idx}`
+		let newRule = new FormalSystemRule([], newResult);
+		newRule.name = `v${idx}`;
 		newRule.addInto(this, newRule.name);
-		return newRule
+		return newRule;
 	}
 	metaInvDeductTheorem(idx: string): FormalSystemRule | null {
 		if (idx[0] === '>') {

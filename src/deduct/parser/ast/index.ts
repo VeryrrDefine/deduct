@@ -66,7 +66,8 @@ export class Proposition extends AST {
 						return undefined;
 					}
 					return q;
-				}).filter(x=>x!==undefined)
+				})
+				.filter((x) => x !== undefined)
 				.flat();
 			return t2;
 		})(this);
@@ -74,22 +75,25 @@ export class Proposition extends AST {
 	findAnyTerm(isNotPreApply = false): string[] {
 		return (function (t) {
 			let v2 = t.variables
-			.map((x)=> {
-				let q = x.findAnyTerm(isNotPreApply)
-				if (x instanceof AnyTermPreApplyAST && isNotPreApply) {
-					return undefined;
-				}
-				return q;
-			}).filter(x=>x!==undefined).flat();
+				.map((x) => {
+					let q = x.findAnyTerm(isNotPreApply);
+					if (x instanceof AnyTermPreApplyAST && isNotPreApply) {
+						return undefined;
+					}
+					return q;
+				})
+				.filter((x) => x !== undefined)
+				.flat();
 			let t2 = t.propositions
-			.map((x) => {
-				let q = x.findAnyTerm(isNotPreApply);
-				
-				return q;
-			}).filter(x=>x!==undefined)
-			.flat();
+				.map((x) => {
+					let q = x.findAnyTerm(isNotPreApply);
+
+					return q;
+				})
+				.filter((x) => x !== undefined)
+				.flat();
 			return [...new Set(v2.concat(t2))];
-		})(this)
+		})(this);
 	}
 	displayFancy(level?: number) {
 		return '';
@@ -319,7 +323,7 @@ export class ExistsPropositionAST extends Proposition {
 	}
 	constructor(variable: Term, proposition: Proposition) {
 		super([proposition]);
-		this.variables = [variable]
+		this.variables = [variable];
 	}
 	toString(): string {
 		return `(E${this.variables[0]}:(${this.proposition}))`;
@@ -341,8 +345,8 @@ export class ForallPropositionAST extends Proposition {
 		return this.propositions[0];
 	}
 	constructor(variable: Term, proposition: Proposition) {
-		super([proposition]);	
-		this.variables = [variable]	
+		super([proposition]);
+		this.variables = [variable];
 	}
 	toString(): string {
 		return `(V${this.variables[0]}:(${this.proposition}))`;
@@ -373,7 +377,7 @@ export class TermEqualsAST extends Proposition {
 		return new TermEqualsAST(this.variables[0], this.variables[1]);
 	}
 	displayFancy(level?: number): string {
-		console.log(this)
+		console.log(this);
 		if (level == 1) {
 			return `(${this.variables[0].displayFancy(1)}=${this.variables[1].displayFancy(1)})`;
 		}

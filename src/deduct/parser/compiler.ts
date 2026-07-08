@@ -42,7 +42,7 @@ export class PropositionParser {
 	tokens: IToken[];
 	image: string;
 	pos: number = 0;
-	constructor(x: IToken[],image:string) {
+	constructor(x: IToken[], image: string) {
 		this.tokens = x;
 		this.image = image;
 	}
@@ -73,7 +73,10 @@ export class PropositionParser {
 	/**
 	 * Any parse,must stop, the 1st token after this proposition,
 	 */
-	parseProposition(priority = PropositionParser.priorities.LOWEST, checkEOF=false): Proposition {
+	parseProposition(
+		priority = PropositionParser.priorities.LOWEST,
+		checkEOF = false,
+	): Proposition {
 		const cur = this.curToken();
 
 		let left: Proposition = new Proposition();
@@ -135,10 +138,10 @@ export class PropositionParser {
 			this.consumeCurrent(curT.tokenType);
 			let rightterm = this.parseTerm();
 			if (curT.tokenType === BelongTo) {
-				left = new TermBelongToAST(leftterm, rightterm)
+				left = new TermBelongToAST(leftterm, rightterm);
 			}
 			if (curT.tokenType === Equals) {
-				left = new TermEqualsAST(leftterm,rightterm)
+				left = new TermEqualsAST(leftterm, rightterm);
 			}
 		} else {
 			throw new Error(`Unknown Proposition Token: ${cur.tokenType.name} on ${this.image}`);
@@ -158,7 +161,11 @@ export class PropositionParser {
 		}
 		if (checkEOF) {
 			if (this.pos > this.tokens.length) {
-				console.warn("Detected EOF lost on parsing propositions on parsing"+this.image, this.pos, this.tokens.length)
+				console.warn(
+					'Detected EOF lost on parsing propositions on parsing' + this.image,
+					this.pos,
+					this.tokens.length,
+				);
 			}
 		}
 		return left;
@@ -183,13 +190,13 @@ export class PropositionParser {
 		[Conjunction.name]: ConjunctionPropositionAST,
 	};
 
-	parseTerm(priority = PropositionParser.priorities.LOWEST): Term{
+	parseTerm(priority = PropositionParser.priorities.LOWEST): Term {
 		let left = this.parseVariable();
 
 		return left;
 	}
 
-	parseRule(checkEOF=false): FormalSystemRule {
+	parseRule(checkEOF = false): FormalSystemRule {
 		const conditions: Proposition[] = [];
 		while (this.curToken().tokenType !== VDash) {
 			conditions.push(this.parseProposition());
@@ -198,7 +205,7 @@ export class PropositionParser {
 			else this.consumeCurrent(Comma);
 		}
 		this.consumeCurrent(VDash);
-		const result: Proposition = this.parseProposition(undefined,checkEOF);
+		const result: Proposition = this.parseProposition(undefined, checkEOF);
 		return new FormalSystemRule(conditions, result);
 	}
 
@@ -233,7 +240,7 @@ export function parseAndConvertToAst(code: string, isRule = false): any {
 	// throw new Error('');
 	const parser = new PropositionParser(lexResult.tokens, code);
 
-	return isRule ? parser.parseRule(true) : parser.parseProposition(undefined,true);
+	return isRule ? parser.parseRule(true) : parser.parseProposition(undefined, true);
 	// const parser = new PropositionParser();
 	// parser.input = lexResult.tokens;
 	// const cst = isRule ? parser.fsRule() : parser.proposition();
@@ -253,8 +260,7 @@ export function parseToTerm(code: string) {
 	// throw new Error('');
 	const parser = new PropositionParser(lexResult.tokens, code);
 
-	return  parser.parseTerm() ;
-
+	return parser.parseTerm();
 }
 
 export function toProposition(code: string): Proposition {
